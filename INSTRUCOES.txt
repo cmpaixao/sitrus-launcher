@@ -1,0 +1,82 @@
+SITRUS LAUNCHER
+===============
+
+Launcher proprio do pack Sitrus Cobblemon (Minecraft 1.21.1 + Fabric).
+Instala o pack do Modrinth sozinho e conecta em sitruscobblemon.com.
+
+Links:
+- Servidor: sitruscobblemon.com
+- Wiki:    https://wiki-sitruscobblemon.com.br/
+- Loja:    https://sitruscobblemon.craftingstore.net/
+- Discord: https://discord.gg/wbavFswmkr
+- Pack:    https://modrinth.com/modpack/sitrus-cobblemon
+
+
+1) COMO LIGAR / TESTAR O LAUNCHER
+---------------------------------
+
+Precisa ter o Node.js instalado (versao LTS):
+https://nodejs.org
+
+1. Extraia este ZIP em uma pasta.
+2. Abra o PowerShell nessa pasta (Shift + botao direito > "Abrir no Terminal").
+3. Rode estes dois comandos, um de cada vez:
+
+   npm install
+   npm start
+
+A janela do Sitrus Launcher abre.
+Entre com Microsoft (original) ou nick offline e clique em Jogar.
+
+
+2) COMO GERAR O ARQUIVO PARA OS JOGADORES BAIXAREM
+--------------------------------------------------
+
+Na mesma pasta extraida, rode:
+
+   npm run pack
+
+Quando terminar, o arquivo dos jogadores fica em:
+
+   dist\Sitrus Launcher 1.0.0.exe
+
+Esse .exe e portatil:
+- o jogador so baixa e clica
+- NAO precisa instalar Node, Java, CurseForge ou Modrinth App
+
+Suba esse .exe onde os players forem baixar:
+Discord, Google Drive, MediaFire, site, loja, etc.
+
+Se a pasta PARA_OS_JOGADORES ja vier neste ZIP com o .exe,
+pode publicar esse arquivo direto, sem gerar de novo.
+
+
+3) O QUE O JOGADOR FAZ
+----------------------
+
+1. Baixa o .exe
+2. Abre
+3. Entra na conta
+4. Clica em Jogar
+
+O launcher baixa sozinho (na primeira vez):
+- Java 21, se o PC nao tiver
+- Minecraft 1.21.1
+- Fabric
+- mods do pack Sitrus
+
+A primeira abertura demora (download). Depois e rapido.
+O jogo entra no servidor sitruscobblemon.com.
+
+
+4) CONFIG RAPIDA
+----------------
+
+Na aba Config do launcher:
+- Memoria RAM
+- Esconder o launcher ao abrir o jogo
+- IP do servidor (padrao: sitruscobblemon.com)
+
+Para mudar IP, Discord, Wiki ou Loja no codigo,
+edite o arquivo sitrus.config.json e rode npm start de novo.
+Depois gere outro .exe com npm run pack.

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sitrus Launcher</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="window">
+      <header class="titlebar">
+        <div class="brand">
+          <img src="../assets/icon.png" alt="Sitrus" />
+          <span>Sitrus Launcher</span>
+        </div>
+        <div class="window-actions">
+          <button type="button" id="minBtn" title="Minimizar" aria-label="Minimizar">—</button>
+          <button type="button" id="maxBtn" title="Maximizar" aria-label="Maximizar">□</button>
+          <button type="button" id="closeBtn" class="danger" title="Fechar" aria-label="Fechar">✕</button>
+        </div>
+      </header>
+
+      <main class="layout" id="layout">
+        <section class="hero scroll">
+          <div class="hero-glow"></div>
+          <p class="eyebrow">Cobblemon · Fabric 1.21.1</p>
+          <h1>Sitrus Cobblemon</h1>
+          <p class="lede">
+            Pack oficial do servidor. O launcher instala o Fabric, o Minecraft 1.21.1
+            e os mods do Modrinth pra você só clicar em Jogar.
+          </p>
+          <div class="meta">
+            <span id="packVersion">Pack —</span>
+            <span id="updateHint"></span>
+          </div>
+          <div class="links">
+            <button type="button" id="discordBtn" title="Abre o Discord no navegador">Discord</button>
+            <button type="button" id="wikiBtn" title="Abre a wiki no navegador">Wiki</button>
+            <button type="button" id="storeBtn" title="Abre a loja no navegador">Loja</button>
+            <button type="button" id="modrinthBtn" title="Abre o pack no Modrinth">Página do pack</button>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <nav class="tabs" role="tablist" aria-label="Seções do launcher">
+            <button type="button" id="homeTabBtn" class="tab active" role="tab" aria-selected="true" aria-controls="homeTab" tabindex="0" data-tab="home">Jogar</button>
+            <button type="button" id="extrasTabBtn" class="tab" role="tab" aria-selected="false" aria-controls="extrasTab" tabindex="-1" data-tab="extras">Extras</button>
+            <button type="button" id="configTabBtn" class="tab" role="tab" aria-selected="false" aria-controls="configTab" tabindex="-1" data-tab="config">Config</button>
+          </nav>
+
+          <div id="homeTab" class="tab-page scroll" role="tabpanel" aria-labelledby="homeTabBtn">
+            <section class="card account">
+              <div id="loggedOut">
+                <h2>Conta</h2>
+                <p>Entre com Microsoft (original) ou jogue com nick offline.</p>
+                <button type="button" id="msBtn" class="primary">Entrar com Microsoft</button>
+                <div class="offline-row">
+                  <label class="sr-only" for="offlineNick">Nick offline</label>
+                  <input id="offlineNick" maxlength="16" placeholder="Nick offline" autocomplete="username" aria-describedby="nickHelp" />
+                  <button type="button" id="offlineBtn">Offline</button>
+                </div>
+                <p id="nickHelp" class="hint">3 a 16 caracteres: letras, números ou _</p>
+              </div>
+              <div id="loggedIn" hidden>
+                <div class="who">
+                  <img id="avatar" alt="Avatar do jogador" />
+                  <div>
+                    <strong id="playerName">Jogador</strong>
+                    <small id="accountType">conta</small>
+                  </div>
+                </div>
+                <button type="button" id="logoutBtn" class="ghost">Trocar conta</button>
+              </div>
+            </section>
+
+            <label class="check update-check" for="checkUpdates">
+              <input id="checkUpdates" type="checkbox" />
+              Buscar atualização do modpack
+            </label>
+
+            <button type="button" id="playBtn" class="play" disabled title="Entre com uma conta para jogar">Entrar para jogar</button>
+            <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="status" id="progress">
+              <div id="bar"></div>
+            </div>
+            <p id="status" role="status" aria-live="polite">Pronto quando você estiver.</p>
+          </div>
+
+          <div id="extrasTab" class="tab-page" hidden role="tabpanel" aria-labelledby="extrasTabBtn">
+            <section class="card extras-card">
+              <h2>Extras do client</h2>
+              <p>Só o que roda no seu PC, sem precisar estar no servidor. Tudo filtrado para Fabric 1.21.1 / Sitrus.</p>
+              <div class="filters" role="group" aria-label="Tipo de extra">
+                <button type="button" class="filter active" data-type="mod" aria-pressed="true">Mods client</button>
+                <button type="button" class="filter" data-type="resourcepack" aria-pressed="false">Texturas</button>
+                <button type="button" class="filter" data-type="shader" aria-pressed="false">Shaders</button>
+              </div>
+              <label class="sr-only" for="extrasSearch">Buscar extras no Modrinth</label>
+              <input id="extrasSearch" type="search" placeholder="Buscar no Modrinth..." autocomplete="off" />
+              <p id="extrasHint" class="hint" role="note"></p>
+              <div id="extrasList" class="extras-list scroll" tabindex="0" aria-label="Lista de extras"></div>
+            </section>
+          </div>
+
+          <div id="configTab" class="tab-page scroll" hidden role="tabpanel" aria-labelledby="configTabBtn">
+            <section class="card">
+              <h2>Configurações</h2>
+              <p>Ajuste memória, conexão e comportamento do launcher.</p>
+              <label class="ram" for="ram">
+                <span>Memória RAM</span>
+                <strong><span id="ramValue">4</span> GB</strong>
+              </label>
+              <input id="ram" type="range" min="2" max="12" step="1" value="4" aria-valuemin="2" aria-valuemax="12" />
+              <p class="hint">4 GB serve na maioria dos PCs. Suba se o jogo fechar por falta de memória.</p>
+              <label class="check" for="closeOnPlay">
+                <input id="closeOnPlay" type="checkbox" />
+                Esconder o launcher ao abrir o jogo
+              </label>
+              <label class="field" for="serverAddress">
+                IP do servidor
+                <input id="serverAddress" placeholder="sitruscobblemon.com" spellcheck="false" />
+              </label>
+            </section>
+            <section class="card">
+              <h2>Ajuda rápida</h2>
+              <ul class="help-list">
+                <li>Teclas <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> trocam Jogar, Extras e Config.</li>
+                <li>Na lista de extras, role com o mouse ou a barra laranja.</li>
+                <li>Remover um extra pede confirmação para não apagar sem querer.</li>
+                <li>Wiki, loja e Discord abrem no navegador.</li>
+              </ul>
+            </section>
+          </div>
+        </aside>
+      </main>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>

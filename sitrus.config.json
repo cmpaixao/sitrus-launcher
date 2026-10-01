@@ -1,0 +1,12 @@
+{
+  "launcherName": "Sitrus Launcher",
+  "modrinthSlug": "sitrus-cobblemon",
+  "discord": "https://discord.gg/wbavFswmkr",
+  "wiki": "https://wiki-sitruscobblemon.com.br/",
+  "store": "https://sitruscobblemon.craftingstore.net/",
+  "server": {
+    "name": "Sitrus Cobblemon",
+    "address": "sitruscobblemon.com",
+    "port": 25565
+  }
+}

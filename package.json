@@ -1,0 +1,42 @@
+{
+  "name": "sitrus-launcher",
+  "version": "1.0.0",
+  "description": "Launcher do pack Sitrus Cobblemon (Fabric 1.21.1)",
+  "main": "electron/main.js",
+  "author": "Sitrus",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --win portable --x64"
+  },
+  "dependencies": {
+    "extract-zip": "^2.0.1",
+    "minecraft-launcher-core": "^3.18.2",
+    "msmc": "^5.0.5"
+  },
+  "devDependencies": {
+    "electron": "^33.4.5",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.sitrus.launcher",
+    "productName": "Sitrus Launcher",
+    "asar": true,
+    "files": [
+      "electron/**/*",
+      "renderer/**/*",
+      "assets/**/*",
+      "sitrus.config.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "icon": "assets/icon.png",
+      "signAndEditExecutable": false,
+      "target": [
+        "portable"
+      ]
+    }
+  }
+}
