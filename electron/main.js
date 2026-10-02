@@ -15,6 +15,9 @@ const { launchGame } = require("./game");
 const { searchExtras, installExtra, removeExtra } = require("./extras");
 
 app.setName("Sitrus Launcher");
+if (process.platform === "win32") {
+  app.setAppUserModelId("com.sitrus.launcher");
+}
 
 let mainWindow = null;
 let launching = false;
@@ -33,7 +36,7 @@ function createWindow() {
     minHeight: 640,
     frame: false,
     backgroundColor: "#0E0C0A",
-    icon: path.join(__dirname, "..", "assets", "icon.png"),
+    icon: path.join(__dirname, "..", "assets", "icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,

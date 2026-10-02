@@ -22,6 +22,7 @@ const ui = {
   playBtn: document.getElementById("playBtn"),
   checkUpdates: document.getElementById("checkUpdates"),
   bar: document.getElementById("bar"),
+  progress: document.getElementById("progress"),
   status: document.getElementById("status"),
   packVersion: document.getElementById("packVersion"),
   updateHint: document.getElementById("updateHint"),
@@ -31,6 +32,7 @@ const ui = {
   homeTab: document.getElementById("homeTab"),
   extrasTab: document.getElementById("extrasTab"),
   configTab: document.getElementById("configTab"),
+  configHint: document.getElementById("configAccountHint"),
   extrasSearch: document.getElementById("extrasSearch"),
   extrasList: document.getElementById("extrasList"),
   extrasHint: document.getElementById("extrasHint"),
@@ -62,7 +64,11 @@ function setStatus(text, percent, isError = false) {
   if (typeof percent === "number") {
     const value = Math.max(0, Math.min(100, percent));
     ui.bar.style.width = `${value}%`;
-    document.getElementById("progress")?.setAttribute("aria-valuenow", String(Math.round(value)));
+    ui.progress?.setAttribute("aria-valuenow", String(Math.round(value)));
+    const showBar = state.busy || (value > 0 && value < 100);
+    if (ui.progress) ui.progress.hidden = !showBar;
+  } else if (!state.busy && ui.progress) {
+    ui.progress.hidden = true;
   }
 }
 
@@ -78,6 +84,12 @@ function renderAccount() {
       ? "O launcher está preparando o jogo"
       : "Iniciar o Sitrus Cobblemon";
   ui.playBtn.setAttribute("aria-busy", state.busy ? "true" : "false");
+  if (ui.logoutBtn) ui.logoutBtn.hidden = !account;
+  if (ui.configHint) {
+    ui.configHint.textContent = account
+      ? `Conectado como ${account.name}. Trocar conta volta para o login.`
+      : "Entre na aba Jogar para conectar uma conta.";
+  }
   if (!account) return;
   ui.playerName.textContent = account.name;
   ui.accountType.textContent = account.type === "microsoft" ? "Conta Microsoft" : "Offline";
@@ -102,6 +114,62 @@ async function persistSettings() {
     lastTab: state.lastTab || "home",
   });
 }
+
+function initSlider() {
+  const slider = document.getElementById("slider");
+  if (!slider) return;
+  const slides = [...slider.querySelectorAll(".slide")];
+  const dots = [...slider.querySelectorAll(".slider-dot")];
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let index = 0;
+  let timer = null;
+
+  function go(next) {
+    index = (next + slides.length) % slides.length;
+    slides.forEach((slide, i) => slide.classList.toggle("is-active", i === index));
+    dots.forEach((dot, i) => {
+      const selected = i === index;
+      dot.classList.toggle("is-active", selected);
+      dot.setAttribute("aria-selected", selected ? "true" : "false");
+    });
+  }
+
+  function stop() {
+    if (timer) clearInterval(timer);
+    timer = null;
+  }
+
+  function start() {
+    stop();
+    if (reduceMotion || slides.length < 2) return;
+    timer = setInterval(() => go(index + 1), 4500);
+  }
+
+  slider.querySelector(".prev")?.addEventListener("click", () => {
+    go(index - 1);
+    start();
+  });
+  slider.querySelector(".next")?.addEventListener("click", () => {
+    go(index + 1);
+    start();
+  });
+  dots.forEach((dot, i) => {
+    dot.addEventListener("click", () => {
+      go(i);
+      start();
+    });
+  });
+  slider.addEventListener("mouseenter", stop);
+  slider.addEventListener("mouseleave", start);
+  slider.addEventListener("focusin", stop);
+  slider.addEventListener("focusout", (event) => {
+    if (!slider.contains(event.relatedTarget)) start();
+  });
+  go(0);
+  start();
+}
+
+initSlider();
 
 ui.minBtn.onclick = () => window.sitrus.minimize();
 ui.maxBtn.onclick = async () => {
@@ -215,7 +283,8 @@ window.addEventListener("keydown", (event) => {
 ui.logoutBtn.onclick = async () => {
   state.account = await window.sitrus.logout();
   renderAccount();
-  setStatus("Conta desconectada.");
+  setStatus("Conta desconectada. Entre de novo na aba Jogar.");
+  showTab("home");
 };
 
 ui.playBtn.onclick = async () => {

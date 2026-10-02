@@ -7,7 +7,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "electron .",
-    "pack": "electron-builder --win portable --x64"
+    "pack": "electron-builder --win nsis portable --x64",
+    "icon": "node scripts/make-icon.js"
   },
   "dependencies": {
     "extract-zip": "^2.0.1",
@@ -16,7 +17,8 @@
   },
   "devDependencies": {
     "electron": "^33.4.5",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^2.1.8"
   },
   "build": {
     "appId": "com.sitrus.launcher",
@@ -32,11 +34,29 @@
       "output": "dist"
     },
     "win": {
-      "icon": "assets/icon.png",
+      "icon": "assets/icon.ico",
       "signAndEditExecutable": false,
+      "executableName": "Sitrus Launcher",
       "target": [
+        "nsis",
         "portable"
       ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sitrus Launcher",
+      "uninstallDisplayName": "Sitrus Launcher",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "artifactName": "Sitrus-Launcher-Setup-${version}.exe"
+    },
+    "portable": {
+      "artifactName": "Sitrus-Launcher-${version}.exe"
     }
   }
 }
