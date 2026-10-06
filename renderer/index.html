@@ -67,6 +67,10 @@
         </section>
 
         <aside class="panel">
+          <div id="launcherUpdate" class="launcher-update" hidden>
+            <p id="launcherUpdateText"></p>
+            <button type="button" id="restartUpdateBtn" hidden>Reiniciar agora</button>
+          </div>
           <nav class="tabs" role="tablist" aria-label="Seções do launcher">
             <button type="button" id="homeTabBtn" class="tab active" role="tab" aria-selected="true" aria-controls="homeTab" tabindex="0" data-tab="home">Jogar</button>
             <button type="button" id="extrasTabBtn" class="tab" role="tab" aria-selected="false" aria-controls="extrasTab" tabindex="-1" data-tab="extras">Extras</button>
@@ -108,17 +112,27 @@
                 <div id="bar"></div>
               </div>
               <p id="status" role="status" aria-live="polite">Pronto quando você estiver.</p>
+              <button type="button" id="shareLogHomeBtn" class="ghost">Enviar log (mclo.gs)</button>
             </div>
           </div>
 
           <div id="extrasTab" class="tab-page" hidden role="tabpanel" aria-labelledby="extrasTabBtn">
             <section class="card extras-card">
-              <h2>Extras do client</h2>
-              <p>Só o que roda no seu PC, sem precisar estar no servidor. Tudo filtrado para Fabric 1.21.1 / Sitrus.</p>
+              <h2>Extras</h2>
+              <p>Mods, texturas e shaders do Modrinth. O filtro de loader segue o pack (Sitrus é Fabric). Forge e NeoForge só servem se o pack for desses loaders.</p>
               <div class="filters" role="group" aria-label="Tipo de extra">
-                <button type="button" class="filter active" data-type="mod" aria-pressed="true">Mods client</button>
-                <button type="button" class="filter" data-type="resourcepack" aria-pressed="false">Texturas</button>
-                <button type="button" class="filter" data-type="shader" aria-pressed="false">Shaders</button>
+                <button type="button" class="filter filter-type active" data-type="mod" aria-pressed="true">Mods</button>
+                <button type="button" class="filter filter-type" data-type="resourcepack" aria-pressed="false">Texturas</button>
+                <button type="button" class="filter filter-type" data-type="shader" aria-pressed="false">Shaders</button>
+              </div>
+              <div class="filters" role="group" aria-label="Loader compatível">
+                <button type="button" class="filter filter-loader active" data-loader="fabric" aria-pressed="true">Fabric</button>
+                <button type="button" class="filter filter-loader" data-loader="forge" aria-pressed="false">Forge</button>
+                <button type="button" class="filter filter-loader" data-loader="neoforge" aria-pressed="false">NeoForge</button>
+              </div>
+              <div class="extras-toolbar">
+                <button type="button" id="openPackFolderBtn" class="ghost">Abrir pasta do pack</button>
+                <button type="button" id="openExtrasFolderBtn" class="ghost">Abrir pasta deste extra</button>
               </div>
               <label class="sr-only" for="extrasSearch">Buscar extras no Modrinth</label>
               <input id="extrasSearch" type="search" placeholder="Buscar no Modrinth..." autocomplete="off" />
@@ -150,6 +164,15 @@
                 IP do servidor
                 <input id="serverAddress" placeholder="sitruscobblemon.com" spellcheck="false" />
               </label>
+              <p class="hint">Launcher <span id="launcherVersion">—</span>. Quem instalou pelo Setup atualiza sozinho quando sair versão nova.</p>
+              <button type="button" id="openPackFolderConfigBtn" class="ghost">Abrir pasta do pack</button>
+            </section>
+            <section class="card" id="supportCard">
+              <h2>Suporte</h2>
+              <p>Envia o último log do jogo para o mclo.gs. O link é copiado e você pode colar no Discord.</p>
+              <button type="button" id="shareLogBtn" class="ghost">Enviar log (mclo.gs)</button>
+              <p id="shareLogHint" class="hint" role="status"></p>
+              <div id="shareLogResult" class="log-result" hidden></div>
             </section>
             <section class="card">
               <h2>Ajuda rápida</h2>
@@ -158,6 +181,9 @@
                 <li>Na lista de extras, role com o mouse ou a barra laranja.</li>
                 <li>Remover um extra pede confirmação para não apagar sem querer.</li>
                 <li>Wiki, loja e Discord abrem no navegador.</li>
+                <li>O Setup baixa atualização do launcher sozinho. A versão portátil precisa baixar de novo.</li>
+                <li>Em Extras ou Config, abra a pasta raiz do pack instalado neste PC.</li>
+                <li>Se o jogo fechar errado, envie o log pelo mclo.gs e compartilhe o link.</li>
               </ul>
             </section>
           </div>

@@ -37,6 +37,17 @@ const ui = {
   extrasList: document.getElementById("extrasList"),
   extrasHint: document.getElementById("extrasHint"),
   layout: document.getElementById("layout"),
+  launcherUpdate: document.getElementById("launcherUpdate"),
+  launcherUpdateText: document.getElementById("launcherUpdateText"),
+  restartUpdateBtn: document.getElementById("restartUpdateBtn"),
+  launcherVersion: document.getElementById("launcherVersion"),
+  openPackFolderBtn: document.getElementById("openPackFolderBtn"),
+  openExtrasFolderBtn: document.getElementById("openExtrasFolderBtn"),
+  openPackFolderConfigBtn: document.getElementById("openPackFolderConfigBtn"),
+  shareLogBtn: document.getElementById("shareLogBtn"),
+  shareLogHomeBtn: document.getElementById("shareLogHomeBtn"),
+  shareLogHint: document.getElementById("shareLogHint"),
+  shareLogResult: document.getElementById("shareLogResult"),
 };
 
 let state = {
@@ -47,6 +58,11 @@ let state = {
   extrasType: "mod",
   extrasQuery: "",
   extrasLoaded: false,
+  extrasLoader: "fabric",
+  packLoader: "fabric",
+  extrasOffset: 0,
+  extrasHasMore: false,
+  extrasHits: [],
   lastTab: "home",
 };
 
@@ -304,27 +320,52 @@ ui.playBtn.onclick = async () => {
   }
 };
 
-function extrasHint() {
-  if (state.extrasType === "mod") {
-    return "Mods só de client: HUD, desempenho visual, minimapa. Nada que precise estar no servidor.";
-  }
-  if (state.extrasType === "resourcepack") {
-    return "Resource packs compatíveis com Minecraft 1.21.1. Ative no jogo em Opções > Resource Packs.";
-  }
-  return "Shaders para Iris. Se ainda não tiver Iris, o launcher instala junto. Ative no menu do Iris (padrão: K).";
+function loaderName(loader) {
+  if (loader === "neoforge") return "NeoForge";
+  if (loader === "forge") return "Forge";
+  return "Fabric";
 }
 
-function renderExtras(hits) {
+function extrasHint(total) {
+  const pack = loaderName(state.packLoader);
+  const selected = loaderName(state.extrasLoader);
+  const count = typeof total === "number" ? ` ${total} resultados.` : "";
+  if (state.extrasLoader !== state.packLoader) {
+    return `O pack Sitrus é ${pack}. ${selected} não carrega neste jogo.${count}`;
+  }
+  if (state.extrasType === "mod") {
+    return `Mods ${selected} ${state.pack?.mcVersion || "1.21.1"} compatíveis com o pack. O que já vem no Sitrus não aparece.${count}`;
+  }
+  if (state.extrasType === "resourcepack") {
+    return `Texturas para Minecraft ${state.pack?.mcVersion || "1.21.1"}. Ative no jogo em Opções > Resource Packs.${count}`;
+  }
+  return `Shaders compatíveis com ${selected === "Fabric" ? "Iris" : "Oculus"}. Ative no menu do shader no jogo.${count}`;
+}
+
+function setLoaderButtons() {
+  document.querySelectorAll(".filter-loader").forEach((button) => {
+    const selected = button.dataset.loader === state.extrasLoader;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", selected ? "true" : "false");
+    button.dataset.pack = button.dataset.loader === state.packLoader ? "true" : "false";
+  });
+}
+
+function renderExtras(hits, { append = false, hasMore = false } = {}) {
   ui.extrasHint.textContent = extrasHint();
-  if (!hits.length) {
-    ui.extrasList.innerHTML = `<div class="extra-empty">Nada encontrado nesse filtro. Tente outra busca.</div>`;
+  const more = hasMore
+    ? `<button type="button" class="ghost extra-more" data-action="more">Carregar mais</button>`
+    : "";
+  if (!hits.length && !append) {
+    ui.extrasList.innerHTML = `<div class="extra-empty">Nada encontrado nesse filtro. Tente outra busca.</div>${more}`;
     return;
   }
-  ui.extrasList.innerHTML = hits
+  const cards = hits
     .map((item) => {
       const desc = escapeHtml((item.description || "").slice(0, 110));
       const title = escapeHtml(item.title);
       const icon = escapeHtml(item.icon || "../assets/icon.png");
+      const mismatch = item.loader && item.loader !== state.packLoader;
       const action = item.installed
         ? `<button type="button" class="remove" data-id="${escapeHtml(item.id)}" data-action="remove" aria-label="Remover ${title}">Remover</button>`
         : `<button type="button" data-id="${escapeHtml(item.id)}" data-type="${escapeHtml(item.type)}" data-action="install" aria-label="Instalar ${title}">Instalar</button>`;
@@ -332,39 +373,69 @@ function renderExtras(hits) {
         <img src="${icon}" alt="${title}" />
         <div>
           <strong>${title}</strong>
-          <small>${desc}</small>
+          <small>${desc}${mismatch ? ` · ${escapeHtml(loaderName(item.loader))}` : ""}</small>
         </div>
         ${action}
       </article>`;
     })
     .join("");
+  if (append) {
+    ui.extrasList.querySelector(".extra-more")?.remove();
+    ui.extrasList.querySelector(".extra-empty")?.remove();
+    ui.extrasList.insertAdjacentHTML("beforeend", cards + more);
+    return;
+  }
+  ui.extrasList.innerHTML = cards + more;
 }
 
-async function loadExtras() {
-  ui.extrasList.innerHTML = `<div class="extra-empty">Buscando no Modrinth...</div>`;
+async function loadExtras({ append = false } = {}) {
+  if (!append) {
+    ui.extrasList.innerHTML = `<div class="extra-empty">Buscando no Modrinth...</div>`;
+    state.extrasHits = [];
+    state.extrasOffset = 0;
+  }
   ui.extrasHint.textContent = extrasHint();
   try {
     const data = await window.sitrus.searchExtras({
       type: state.extrasType,
       query: state.extrasQuery,
-      offset: 0,
+      offset: append ? state.extrasOffset : 0,
+      loader: state.extrasLoader,
     });
     state.extrasLoaded = true;
-    renderExtras(data.hits || []);
+    state.extrasOffset = data.offset || 0;
+    state.extrasHasMore = Boolean(data.hasMore);
+    if (data.compat?.packLoader) state.packLoader = data.compat.packLoader;
+    const hits = data.hits || [];
+    state.extrasHits = append ? state.extrasHits.concat(hits) : hits;
+    ui.extrasHint.textContent = extrasHint(data.total);
+    renderExtras(append ? hits : state.extrasHits, { append, hasMore: state.extrasHasMore });
   } catch (error) {
+    if (append) {
+      ui.extrasHint.textContent = error.message || "Falha ao buscar extras.";
+      return;
+    }
     ui.extrasList.innerHTML = `<div class="extra-empty">${escapeHtml(error.message || "Falha ao buscar extras.")}<br /><button type="button" class="ghost" data-action="retry" style="margin-top:10px">Tentar de novo</button></div>`;
   }
 }
 
-document.querySelectorAll(".filter").forEach((button) => {
+document.querySelectorAll(".filter-type").forEach((button) => {
   button.onclick = () => {
-    document.querySelectorAll(".filter").forEach((item) => {
+    document.querySelectorAll(".filter-type").forEach((item) => {
       item.classList.remove("active");
       item.setAttribute("aria-pressed", "false");
     });
     button.classList.add("active");
     button.setAttribute("aria-pressed", "true");
     state.extrasType = button.dataset.type;
+    loadExtras();
+  };
+});
+
+document.querySelectorAll(".filter-loader").forEach((button) => {
+  button.onclick = () => {
+    state.extrasLoader = button.dataset.loader;
+    setLoaderButtons();
     loadExtras();
   };
 });
@@ -382,19 +453,37 @@ ui.extrasList.addEventListener("click", async (event) => {
     loadExtras();
     return;
   }
+  const more = event.target.closest("button[data-action='more']");
+  if (more) {
+    more.disabled = true;
+    more.textContent = "Carregando...";
+    loadExtras({ append: true });
+    return;
+  }
   const button = event.target.closest("button[data-action]");
-  if (!button || state.busy) return;
+  if (!button) return;
   const action = button.dataset.action;
   const id = button.dataset.id;
   if (action === "remove") {
     const ok = window.confirm("Remover este extra do launcher? Você pode instalar de novo depois.");
     if (!ok) return;
   }
+  if (action === "install" && state.extrasLoader !== state.packLoader) {
+    const ok = window.confirm(
+      `O pack Sitrus é ${loaderName(state.packLoader)}. Instalar um extra ${loaderName(state.extrasLoader)} pode não abrir no jogo. Continuar?`
+    );
+    if (!ok) return;
+  }
   button.disabled = true;
   try {
     if (action === "install") {
       button.textContent = "Baixando...";
-      await window.sitrus.installExtra({ id, type: button.dataset.type });
+      ui.extrasHint.textContent = "Baixando e instalando na pasta do pack...";
+      await window.sitrus.installExtra({
+        id,
+        type: button.dataset.type || state.extrasType,
+        loader: state.extrasLoader,
+      });
     } else {
       button.textContent = "Removendo...";
       await window.sitrus.removeExtra(id);
@@ -402,19 +491,122 @@ ui.extrasList.addEventListener("click", async (event) => {
     await loadExtras();
   } catch (error) {
     button.disabled = false;
+    button.textContent = action === "install" ? "Instalar" : "Remover";
     ui.extrasHint.textContent = error.message || "Não deu para concluir.";
   }
+});
+
+async function openPackFolder(kind = "root") {
+  try {
+    await window.sitrus.openFolder(kind);
+  } catch (error) {
+    if (ui.extrasHint) ui.extrasHint.textContent = error.message || "Não deu para abrir a pasta.";
+  }
+}
+
+ui.openPackFolderBtn?.addEventListener("click", () => openPackFolder("root"));
+ui.openPackFolderConfigBtn?.addEventListener("click", () => openPackFolder("root"));
+ui.openExtrasFolderBtn?.addEventListener("click", () => openPackFolder(state.extrasType));
+
+async function shareGameLog() {
+  const buttons = [ui.shareLogBtn, ui.shareLogHomeBtn].filter(Boolean);
+  const hint = ui.shareLogHint;
+  const result = ui.shareLogResult;
+  buttons.forEach((button) => {
+    button.disabled = true;
+    button.textContent = "Enviando log...";
+  });
+  if (hint) hint.textContent = "Lendo o último log e enviando para o mclo.gs...";
+  if (result) {
+    result.hidden = true;
+    result.innerHTML = "";
+  }
+  try {
+    const data = await window.sitrus.shareLog();
+    const problems = data.insights?.problems || [];
+    const info = data.insights?.information || [];
+    const problemHtml = problems.length
+      ? `<p>Problemas detectados:</p><ul>${problems
+          .map((item) => `<li>${escapeHtml(item.message)}${item.solutions?.[0] ? ` — ${escapeHtml(item.solutions[0])}` : ""}</li>`)
+          .join("")}</ul>`
+      : "<p>O mclo.gs não apontou um crash específico neste log.</p>";
+    const infoHtml = info.length
+      ? `<ul>${info.map((item) => `<li>${escapeHtml(item.message || `${item.label}: ${item.value}`)}</li>`).join("")}</ul>`
+      : "";
+    const message = `Log enviado (${data.file}, ${data.lines} linhas, ${data.errors} erros). Link copiado.`;
+    if (hint) hint.textContent = message;
+    setStatus(message, 0);
+    if (result) {
+      result.hidden = false;
+      result.innerHTML = `<p><a href="${escapeHtml(data.url)}" id="logLink">${escapeHtml(data.url)}</a></p>${problemHtml}${infoHtml}`;
+    }
+    if (data.url) window.sitrus.openExternal(data.url);
+  } catch (error) {
+    const text = error.message || "Não deu para enviar o log.";
+    if (hint) hint.textContent = text;
+    setStatus(text, 0, true);
+  } finally {
+    buttons.forEach((button) => {
+      button.disabled = false;
+      button.textContent = "Enviar log (mclo.gs)";
+    });
+  }
+}
+
+ui.shareLogBtn?.addEventListener("click", shareGameLog);
+ui.shareLogHomeBtn?.addEventListener("click", shareGameLog);
+
+ui.shareLogResult?.addEventListener("click", (event) => {
+  const link = event.target.closest("a");
+  if (!link) return;
+  event.preventDefault();
+  window.sitrus.openExternal(link.href);
 });
 
 window.sitrus.onProgress((data) => {
   setStatus(data.message || "Trabalhando...", data.percent);
 });
 
-window.sitrus.onClosed(() => {
+window.sitrus.onClosed((data) => {
   state.busy = false;
   renderAccount();
-  setStatus("Jogo fechado. Pode jogar de novo quando quiser.", 0);
+  const code = Number(data?.code) || 0;
+  if (code !== 0) {
+    setStatus(`O jogo fechou (código ${code}). Envie o log pelo mclo.gs se precisar de ajuda.`, 0, true);
+  } else {
+    setStatus("Jogo fechado. Pode jogar de novo quando quiser.", 0);
+  }
 });
+
+window.sitrus.onUpdate((data) => {
+  const bar = ui.launcherUpdate;
+  const text = ui.launcherUpdateText;
+  const btn = ui.restartUpdateBtn;
+  if (!bar || !text || !btn) return;
+
+  if (data.status === "available") {
+    bar.hidden = false;
+    btn.hidden = true;
+    text.textContent = `Nova versão ${data.version} encontrada. Baixando...`;
+    return;
+  }
+  if (data.status === "downloading") {
+    bar.hidden = false;
+    btn.hidden = true;
+    text.textContent = `Baixando atualização do launcher... ${Math.round(data.percent || 0)}%`;
+    return;
+  }
+  if (data.status === "ready") {
+    bar.hidden = false;
+    btn.hidden = false;
+    text.textContent = `Versão ${data.version} pronta. Reinicie para atualizar.`;
+    return;
+  }
+  bar.hidden = true;
+  btn.hidden = true;
+});
+
+ui.restartUpdateBtn.onclick = () => window.sitrus.installUpdate();
 
 async function boot() {
   const data = await window.sitrus.bootstrap();
@@ -426,13 +618,26 @@ async function boot() {
   showTab(["home", "extras", "config"].includes(data.settings?.lastTab) ? data.settings.lastTab : "home");
   const latest = data.status?.latest?.versionNumber;
   const installed = data.status?.installed?.versionNumber;
-  ui.packVersion.textContent = latest ? `Pack ${latest} · Fabric 1.21.1` : "Pack Sitrus · Fabric 1.21.1";
   ui.updateHint.textContent = data.status?.updateAvailable
     ? `Atualização pendente (${installed || "não instalado"} → ${latest})`
     : installed
       ? "Instalado e atualizado"
       : "Ainda não instalado neste PC";
   setStatus(state.account ? `Bem-vindo, ${state.account.name}.` : "Entre para instalar e jogar.");
+  if (ui.launcherVersion) {
+    ui.launcherVersion.textContent = data.launcherVersion || "dev";
+  }
+  if (data.compat?.loader) {
+    state.packLoader = data.compat.loader;
+    state.extrasLoader = data.compat.loader;
+    if (data.compat.mcVersion) state.pack = { ...(state.pack || {}), mcVersion: data.compat.mcVersion };
+    setLoaderButtons();
+  }
+  const loaderText = loaderName(state.packLoader);
+  const mcText = data.compat?.mcVersion || "1.21.1";
+  ui.packVersion.textContent = latest
+    ? `Pack ${latest} · ${loaderText} ${mcText}`
+    : `Pack Sitrus · ${loaderText} ${mcText}`;
 }
 
 boot().catch((error) => setStatus(error.message, 0, true));

@@ -156,7 +156,18 @@ async function ensurePack(slug, onProgress, options = {}) {
   await extractZip(mrpackPath, { dir: work });
   const index = JSON.parse(fs.readFileSync(path.join(work, "modrinth.index.json"), "utf8"));
   const mcVersion = index.dependencies?.minecraft || "1.21.1";
-  const loaderVersion = index.dependencies?.["fabric-loader"] || (await latestFabricLoader(mcVersion));
+  const loader = index.dependencies?.["fabric-loader"]
+    ? "fabric"
+    : index.dependencies?.neoforge
+      ? "neoforge"
+      : index.dependencies?.forge
+        ? "forge"
+        : "fabric";
+  const loaderVersion =
+    index.dependencies?.["fabric-loader"] ||
+    index.dependencies?.neoforge ||
+    index.dependencies?.forge ||
+    (loader === "fabric" ? await latestFabricLoader(mcVersion) : "");
 
   emit(onProgress, { phase: "fabric", message: `Instalando Fabric ${loaderVersion}...`, percent: 24 });
   const fabricId = await installFabric(root, mcVersion, loaderVersion);
@@ -214,6 +225,7 @@ async function ensurePack(slug, onProgress, options = {}) {
     versionNumber: version.version_number,
     name: version.name,
     mcVersion,
+    loader,
     loaderVersion,
     fabricId,
     packProjectIds: (version.dependencies || []).map((item) => item.project_id).filter(Boolean),

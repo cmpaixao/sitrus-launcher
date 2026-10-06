@@ -12,7 +12,9 @@ const { loadPackConfig, loadSettings, saveSettings } = require("./settings");
 const { ensureJava } = require("./java");
 const { ensurePack, packStatus } = require("./installer");
 const { launchGame } = require("./game");
-const { searchExtras, installExtra, removeExtra } = require("./extras");
+const { searchExtras, installExtra, removeExtra, packFolder, packCompat } = require("./extras");
+const { setupAutoUpdate } = require("./updater");
+const { shareLatestLog } = require("./logs");
 
 app.setName("Sitrus Launcher");
 if (process.platform === "win32") {
@@ -46,7 +48,10 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  setupAutoUpdate(send);
+});
 app.on("window-all-closed", () => app.quit());
 
 ipcMain.handle("window:minimize", () => mainWindow?.minimize());
@@ -64,7 +69,7 @@ ipcMain.handle("app:bootstrap", async () => {
   const settings = loadSettings();
   const account = await restoreAccount();
   const status = await packStatus(pack.modrinthSlug);
-  return { pack, settings, account, status };
+  return { pack, settings, account, status, launcherVersion: app.getVersion(), compat: packCompat() };
 });
 
 ipcMain.handle("settings:save", (_e, partial) => saveSettings(partial));
@@ -104,9 +109,9 @@ ipcMain.handle("game:play", async () => {
       },
       onProgress: (progress) => send("game:progress", progress),
       onLog: (line) => send("game:log", line),
-      onClose: () => {
+      onClose: (code) => {
         launching = false;
-        send("game:closed");
+        send("game:closed", { code: Number(code) || 0 });
         if (mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
       },
     });
@@ -123,5 +128,19 @@ ipcMain.handle("game:play", async () => {
 });
 
 ipcMain.handle("extras:search", async (_e, payload) => searchExtras(payload || {}));
-ipcMain.handle("extras:install", async (_e, payload) => installExtra(payload.id, payload.type));
+ipcMain.handle("extras:install", async (_e, payload) => {
+  try {
+    return await installExtra(payload?.id, payload?.type, payload?.loader);
+  } catch (error) {
+    console.error("extras:install", payload, error);
+    throw error;
+  }
+});
 ipcMain.handle("extras:remove", async (_e, id) => removeExtra(id));
+ipcMain.handle("app:openFolder", async (_e, kind) => {
+  const target = packFolder(kind || "root");
+  const err = await shell.openPath(target);
+  if (err) throw new Error(`Não deu para abrir a pasta: ${err}`);
+  return target;
+});
+ipcMain.handle("logs:share", async () => shareLatestLog());

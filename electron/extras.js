@@ -4,8 +4,9 @@ const { minecraftRoot, extrasFile } = require("./paths");
 const { fetchJson, downloadToFile, readInstance } = require("./installer");
 
 const MODRINTH = "https://api.modrinth.com/v2";
-const MC_VERSION = "1.21.1";
 const IRIS_ID = "YL57xq9U";
+const OCULUS_SLUG = "oculus";
+const LOADERS = ["fabric", "forge", "neoforge"];
 const FOLDERS = {
   mod: "mods",
   resourcepack: "resourcepacks",
@@ -38,7 +39,69 @@ function publicItem(item) {
     type: item.type,
     filename: item.filename,
     versionNumber: item.versionNumber,
+    loader: item.loader,
   };
+}
+
+function extraFolder(type) {
+  const name = FOLDERS[type];
+  if (!name) throw new Error("Tipo de extra inválido.");
+  const folder = path.join(minecraftRoot(), name);
+  fs.mkdirSync(folder, { recursive: true });
+  return folder;
+}
+
+function ensurePackFolders() {
+  fs.mkdirSync(minecraftRoot(), { recursive: true });
+  for (const folder of Object.values(FOLDERS)) {
+    fs.mkdirSync(path.join(minecraftRoot(), folder), { recursive: true });
+  }
+  return minecraftRoot();
+}
+
+function packFolder(kind = "root") {
+  if (kind === "root") {
+    ensurePackFolders();
+    return minecraftRoot();
+  }
+  return extraFolder(kind);
+}
+
+function safeFilename(name) {
+  return path.basename(String(name || "arquivo")).replace(/[<>:"/\\|?*]/g, "_");
+}
+
+function normalizeLoader(value) {
+  const loader = String(value || "").toLowerCase();
+  if (loader === "neo" || loader === "neo-forge" || loader === "neoforge") return "neoforge";
+  if (loader === "forge") return "forge";
+  if (loader === "fabric" || loader === "quilt") return "fabric";
+  return "";
+}
+
+function inferLoader(instance) {
+  const stored = normalizeLoader(instance?.loader);
+  if (stored) return stored;
+  if (instance?.fabricId) return "fabric";
+  const id = String(instance?.loaderVersion || "");
+  if (/neoforge/i.test(id)) return "neoforge";
+  if (/forge/i.test(id) && !/fabric/i.test(id)) return "forge";
+  return "fabric";
+}
+
+function packCompat() {
+  const instance = readInstance();
+  return {
+    mcVersion: instance?.mcVersion || "1.21.1",
+    loader: inferLoader(instance),
+    packLoader: inferLoader(instance),
+  };
+}
+
+function loaderLabel(loader) {
+  if (loader === "neoforge") return "NeoForge";
+  if (loader === "forge") return "Forge";
+  return "Fabric";
 }
 
 async function packProjectIds() {
@@ -53,115 +116,163 @@ async function packProjectIds() {
   }
 }
 
-function facetsFor(type) {
+function facetsFor(type, { loader, mcVersion }) {
+  const versions = [`versions:${mcVersion}`];
+  if (mcVersion.startsWith("1.21")) versions.push("versions:1.21");
   if (type === "mod") {
-    return [
-      ["project_type:mod"],
-      [`versions:${MC_VERSION}`],
-      ["categories:fabric"],
-      ["server_side:unsupported"],
-    ];
+    return [["project_type:mod"], [`versions:${mcVersion}`], [`categories:${loader}`]];
   }
   if (type === "resourcepack") {
-    return [["project_type:resourcepack"], [`versions:${MC_VERSION}`, "versions:1.21"]];
+    return [["project_type:resourcepack"], versions];
   }
-  return [["project_type:shader"], ["categories:iris"]];
+  return [["project_type:shader"], ["categories:iris", "categories:optifine"]];
 }
 
-async function pickVersion(projectId, type) {
-  if (type === "mod") {
-    const versions = await fetchJson(
-      `${MODRINTH}/project/${projectId}/version?game_versions=${encodeURIComponent(
-        JSON.stringify([MC_VERSION])
-      )}&loaders=${encodeURIComponent(JSON.stringify(["fabric"]))}`
-    );
-    return versions.find((item) => item.version_type === "release") || versions[0] || null;
-  }
-  if (type === "resourcepack") {
-    let versions = await fetchJson(
-      `${MODRINTH}/project/${projectId}/version?game_versions=${encodeURIComponent(
-        JSON.stringify([MC_VERSION])
-      )}`
-    );
-    if (!versions.length) {
-      versions = await fetchJson(
-        `${MODRINTH}/project/${projectId}/version?game_versions=${encodeURIComponent(JSON.stringify(["1.21"]))}`
-      );
-    }
-    return versions.find((item) => item.version_type === "release") || versions[0] || null;
-  }
-  let versions = await fetchJson(
-    `${MODRINTH}/project/${projectId}/version?game_versions=${encodeURIComponent(
-      JSON.stringify([MC_VERSION])
-    )}&loaders=${encodeURIComponent(JSON.stringify(["iris"]))}`
-  );
-  if (!versions.length) {
-    versions = await fetchJson(
-      `${MODRINTH}/project/${projectId}/version?loaders=${encodeURIComponent(JSON.stringify(["iris"]))}`
-    );
-  }
-  return versions.find((item) => item.version_type === "release") || versions[0] || null;
+function keepHit(hit, type, packIds) {
+  if (packIds.has(hit.project_id)) return false;
+  if (hit.client_side === "unsupported") return false;
+  return true;
 }
 
-async function searchExtras({ type = "mod", query = "", offset = 0 }) {
+function hitNote(hit, type) {
+  if (type !== "mod") return hit.description || "";
+  if (hit.server_side === "required") return "Precisa estar no servidor também.";
+  if (hit.server_side === "optional") return hit.description || "Roda no client. Opcional no servidor.";
+  return hit.description || "Só de client.";
+}
+
+async function pickVersion(projectId, type, { loader, mcVersion }) {
+  const games = type === "resourcepack" && mcVersion.startsWith("1.21") ? [mcVersion, "1.21"] : [mcVersion];
+  const loaders =
+    type === "mod" ? [loader] : type === "shader" ? ["iris", "optifine"] : [];
+
+  for (const game of games) {
+    const params = new URLSearchParams();
+    params.set("game_versions", JSON.stringify([game]));
+    if (type === "mod") params.set("loaders", JSON.stringify([loader]));
+    else if (type === "shader") params.set("loaders", JSON.stringify(loaders));
+    const versions = await fetchJson(`${MODRINTH}/project/${projectId}/version?${params.toString()}`);
+    const usable = (versions || []).filter((item) => item.files?.length);
+    if (!usable.length) continue;
+    return usable.find((item) => item.version_type === "release") || usable[0];
+  }
+
+  if (type === "shader") {
+    const params = new URLSearchParams({ loaders: JSON.stringify(["iris"]) });
+    const versions = await fetchJson(`${MODRINTH}/project/${projectId}/version?${params.toString()}`);
+    const usable = (versions || []).filter((item) => item.files?.length);
+    if (usable.length) return usable.find((item) => item.version_type === "release") || usable[0];
+  }
+  return null;
+}
+
+async function searchExtras({ type = "mod", query = "", offset = 0, loader } = {}) {
+  ensurePackFolders();
+  const compat = packCompat();
+  const selected = normalizeLoader(loader) || compat.loader;
+  const mcVersion = compat.mcVersion;
   const packIds = await packProjectIds();
   const extras = readExtras();
   const installedIds = new Set(extras.items.map((item) => item.id));
-  const params = new URLSearchParams({
-    limit: "20",
-    offset: String(offset),
-    index: query.trim() ? "relevance" : "downloads",
-    facets: JSON.stringify(facetsFor(type)),
-  });
-  if (query.trim()) params.set("query", query.trim());
+  const wanted = 40;
+  const hits = [];
+  let apiOffset = Number(offset) || 0;
+  let total = 0;
+  const pageSize = 50;
+  const startOffset = apiOffset;
 
-  const data = await fetchJson(`${MODRINTH}/search?${params.toString()}`);
-  const hits = (data.hits || [])
-    .filter((hit) => !packIds.has(hit.project_id))
-    .filter((hit) => hit.client_side !== "unsupported")
-    .filter((hit) => type !== "mod" || hit.server_side === "unsupported")
-    .map((hit) => ({
-      id: hit.project_id,
-      slug: hit.slug,
-      title: hit.title,
-      description: hit.description,
-      icon: hit.icon_url,
-      downloads: hit.downloads,
-      type,
-      installed: installedIds.has(hit.project_id),
-      inPack: false,
-    }));
+  while (hits.length < wanted && apiOffset < startOffset + 400) {
+    const params = new URLSearchParams({
+      limit: String(pageSize),
+      offset: String(apiOffset),
+      index: query.trim() ? "relevance" : "downloads",
+      facets: JSON.stringify(facetsFor(type, { loader: selected, mcVersion })),
+    });
+    if (query.trim()) params.set("query", query.trim());
+
+    const data = await fetchJson(`${MODRINTH}/search?${params.toString()}`);
+    const batch = data.hits || [];
+    total = data.total_hits || total;
+    for (const hit of batch) {
+      if (!keepHit(hit, type, packIds)) continue;
+      hits.push({
+        id: hit.project_id,
+        slug: hit.slug,
+        title: hit.title,
+        description: hitNote(hit, type),
+        icon: hit.icon_url,
+        downloads: hit.downloads,
+        type,
+        loader: selected,
+        serverSide: hit.server_side,
+        installed: installedIds.has(hit.project_id),
+        inPack: false,
+      });
+      if (hits.length >= wanted) break;
+    }
+    apiOffset += batch.length;
+    if (!batch.length || batch.length < pageSize) break;
+  }
+
+  const seen = new Set(hits.map((hit) => hit.id));
+  const installedHits =
+    startOffset === 0
+      ? extras.items
+          .filter((item) => item.type === type && !seen.has(item.id))
+          .map((item) => ({
+            id: item.id,
+            slug: item.slug,
+            title: item.title,
+            description: `Instalado (${item.versionNumber || "neste launcher"})`,
+            icon: "",
+            downloads: 0,
+            type,
+            loader: item.loader || selected,
+            installed: true,
+            inPack: false,
+          }))
+      : [];
 
   return {
-    hits,
-    offset,
-    total: data.total_hits || hits.length,
-    installed: extras.items.map(publicItem),
+    hits: [...installedHits, ...hits],
+    offset: apiOffset,
+    hasMore: apiOffset < total && hits.length > 0,
+    total,
+    compat: {
+      ...compat,
+      selectedLoader: selected,
+      label: `${loaderLabel(selected)} ${mcVersion}`,
+    },
   };
 }
 
-async function installFile(projectId, type) {
+async function installFile(projectId, type, compat) {
+  if (!FOLDERS[type]) throw new Error("Tipo de extra inválido.");
   const project = await fetchJson(`${MODRINTH}/project/${projectId}`);
-  const version = await pickVersion(projectId, type);
+  const version = await pickVersion(projectId, type, compat);
   if (!version) {
-    throw new Error(`Nenhuma versão compatível com o Sitrus (1.21.1 / Fabric).`);
+    throw new Error(`Nenhuma versão compatível com ${loaderLabel(compat.loader)} ${compat.mcVersion}.`);
   }
   const file = version.files.find((item) => item.primary) || version.files[0];
-  if (!file) throw new Error("Esse projeto não tem arquivo para baixar.");
+  if (!file?.url) throw new Error("Esse projeto não tem arquivo para baixar.");
 
-  const folder = path.join(minecraftRoot(), FOLDERS[type]);
-  fs.mkdirSync(folder, { recursive: true });
-  const dest = path.join(folder, file.filename);
+  const folder = extraFolder(type);
+  const filename = safeFilename(file.filename);
+  const dest = path.join(folder, filename);
   await downloadToFile(file.url, dest);
+  if (!fs.existsSync(dest) || fs.statSync(dest).size < 32) {
+    throw new Error(`O download de ${project.title} veio vazio.`);
+  }
 
   const extras = readExtras();
   extras.items = extras.items.filter((item) => item.id !== projectId);
   extras.items.push({
-    id: projectId,
+    id: project.id || projectId,
     slug: project.slug,
     title: project.title,
     type,
-    filename: file.filename,
+    loader: compat.loader,
+    filename,
     versionId: version.id,
     versionNumber: version.version_number,
     installedAt: new Date().toISOString(),
@@ -170,19 +281,33 @@ async function installFile(projectId, type) {
   return publicItem(extras.items.at(-1));
 }
 
-async function ensureIris() {
-  const packIds = await packProjectIds();
-  if (packIds.has(IRIS_ID)) return null;
-  const extras = readExtras();
-  if (extras.items.some((item) => item.id === IRIS_ID)) return null;
-  return installFile(IRIS_ID, "mod");
+function shaderHelperName(loader) {
+  return loader === "fabric" ? "Iris" : "Oculus";
 }
 
-async function installExtra(projectId, type) {
-  if (type === "shader") {
-    await ensureIris();
+async function ensureShaderMod(compat) {
+  const helperId = compat.loader === "fabric" ? IRIS_ID : OCULUS_SLUG;
+  const packIds = await packProjectIds();
+  if (packIds.has(helperId) || packIds.has(IRIS_ID)) return null;
+  const extras = readExtras();
+  if (extras.items.some((item) => item.id === helperId || item.id === IRIS_ID || item.slug === helperId)) {
+    return null;
   }
-  const installed = await installFile(projectId, type);
+  const pattern = compat.loader === "fabric" ? /^iris[-_]/i : /^(oculus|iris)[-_]/i;
+  const already = fs.readdirSync(extraFolder("mod")).some((name) => pattern.test(name));
+  if (already) return null;
+  return installFile(helperId, "mod", compat);
+}
+
+async function installExtra(projectId, type, loader) {
+  if (!projectId) throw new Error("Projeto inválido.");
+  const pack = packCompat();
+  const selected = normalizeLoader(loader) || pack.loader;
+  const compat = { ...pack, loader: selected };
+  if (type === "shader") {
+    await ensureShaderMod(compat);
+  }
+  const installed = await installFile(projectId, type, compat);
   return { installed, extras: readExtras().items.map(publicItem) };
 }
 
@@ -190,7 +315,7 @@ async function removeExtra(projectId) {
   const extras = readExtras();
   const item = extras.items.find((entry) => entry.id === projectId);
   if (!item) return { extras: extras.items.map(publicItem) };
-  const dest = path.join(minecraftRoot(), FOLDERS[item.type], item.filename);
+  const dest = path.join(extraFolder(item.type), item.filename);
   if (fs.existsSync(dest)) fs.rmSync(dest, { force: true });
   extras.items = extras.items.filter((entry) => entry.id !== projectId);
   writeExtras(extras);
@@ -201,4 +326,14 @@ function listInstalledExtras() {
   return readExtras().items.map(publicItem);
 }
 
-module.exports = { searchExtras, installExtra, removeExtra, listInstalledExtras };
+module.exports = {
+  searchExtras,
+  installExtra,
+  removeExtra,
+  listInstalledExtras,
+  packFolder,
+  ensurePackFolders,
+  packCompat,
+  LOADERS,
+  shaderHelperName,
+};

@@ -23,7 +23,14 @@ npm start
 npm run pack
 ```
 
-O arquivo sai em `dist/Sitrus Launcher 1.0.0.exe`. É portátil: o player só baixa e clica. Não precisa de Node, Java, CurseForge ou Modrinth App.
+Os arquivos saem em `dist/`:
+
+- `Sitrus-Launcher-Setup-*.exe` — instalador. **Use este** para o launcher atualizar sozinho.
+- `Sitrus-Launcher-*.exe` — portátil. Cada versão nova precisa baixar de novo.
+
+Quem instalou o Setup não precisa baixar outra vez: ao abrir, o launcher olha as [Releases do GitHub](https://github.com/cmpaixao/sitrus-launcher/releases), baixa a atualização e pede para reiniciar.
+
+Push no `master` dispara o build e publica a release. A primeira vez, quem ainda está na cópia antiga precisa instalar o Setup uma vez.
 
 ## O que o jogador faz
 

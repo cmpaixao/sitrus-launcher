@@ -36,19 +36,29 @@ Na mesma pasta extraida, rode:
 
    npm run pack
 
-Quando terminar, o arquivo dos jogadores fica em:
+Quando terminar, os arquivos dos jogadores ficam em:
 
-   dist\Sitrus Launcher 1.0.0.exe
+   dist\Sitrus-Launcher-Setup-1.1.0.exe   (instalador, atualiza sozinho)
+   dist\Sitrus-Launcher-1.1.0.exe         (portatil, precisa baixar de novo)
 
-Esse .exe e portatil:
-- o jogador so baixa e clica
-- NAO precisa instalar Node, Java, CurseForge ou Modrinth App
+O Setup e o que os players devem usar no dia a dia:
+- instala atalho na area de trabalho
+- NAO precisa de Node, Java, CurseForge ou Modrinth App
+- nas proximas att, o launcher baixa sozinho e pede pra reiniciar
 
-Suba esse .exe onde os players forem baixar:
+A versao portatil continua existindo, mas ela NAO atualiza sozinha.
+
+Atualizacao automatica:
+1. Jogador instala o Setup uma vez
+2. Voce sobe a att no GitHub (branch master)
+3. O GitHub gera o .exe novo nas Releases
+4. Na proxima vez que o jogador abrir o launcher, ele baixa a att
+
+Quem ainda esta com a copia antiga (sem atualizador) precisa
+instalar o Setup uma vez. Depois disso, nao precisa baixar de novo.
+
+Suba o Setup onde os players forem baixar a primeira vez:
 Discord, Google Drive, MediaFire, site, loja, etc.
-
-Se a pasta PARA_OS_JOGADORES ja vier neste ZIP com o .exe,
-pode publicar esse arquivo direto, sem gerar de novo.
 
 
 3) O QUE O JOGADOR FAZ

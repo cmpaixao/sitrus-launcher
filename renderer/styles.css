@@ -327,6 +327,40 @@ h1 {
   overflow: hidden;
 }
 
+.launcher-update {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(247, 185, 68, 0.12);
+  flex-shrink: 0;
+}
+
+.launcher-update[hidden] {
+  display: none;
+}
+
+.launcher-update p {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.launcher-update button {
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, #ffd56a, var(--accent));
+  color: #3a2a08;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .layout.full-panel {
   grid-template-columns: 1fr;
 }
@@ -367,6 +401,17 @@ h1 {
   margin-bottom: 12px;
 }
 
+.extras-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.extras-toolbar .ghost {
+  width: auto;
+}
+
 .filter {
   border: 1px solid var(--line);
   background: #120f0c;
@@ -382,6 +427,16 @@ h1 {
   background: linear-gradient(180deg, #ffd56a, var(--accent));
   color: #3a2a08;
   border-color: transparent;
+}
+
+.filter-loader:not(.active) {
+  opacity: 0.9;
+}
+
+.filter-loader[data-pack="true"]::after {
+  content: " pack";
+  font-size: 10px;
+  font-weight: 800;
 }
 
 .hint {
@@ -461,6 +516,11 @@ h1 {
   color: var(--muted);
   font-size: 13px;
   padding: 18px 8px;
+}
+
+.extra-more {
+  width: 100%;
+  margin-top: 4px;
 }
 
 .tab {
@@ -594,6 +654,12 @@ input {
   width: 100%;
 }
 
+#openPackFolderConfigBtn,
+#shareLogBtn {
+  margin-top: 12px;
+  width: 100%;
+}
+
 .who img {
   width: 48px;
   height: 48px;
@@ -652,6 +718,30 @@ input[type="range"] {
   margin: 0;
   color: var(--muted);
   font-size: 13px;
+}
+
+#shareLogHomeBtn {
+  width: 100%;
+}
+
+.log-result {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #120f0c;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.log-result a {
+  color: var(--accent);
+}
+
+.log-result ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
 }
 
 #status.is-error {
