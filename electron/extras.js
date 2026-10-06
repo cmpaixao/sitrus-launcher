@@ -131,6 +131,7 @@ function facetsFor(type, { loader, mcVersion }) {
 function keepHit(hit, type, packIds) {
   if (packIds.has(hit.project_id)) return false;
   if (hit.client_side === "unsupported") return false;
+  if (type === "mod" && hit.server_side === "required") return false;
   return true;
 }
 
@@ -166,11 +167,10 @@ async function pickVersion(projectId, type, { loader, mcVersion }) {
   return null;
 }
 
-async function searchExtras({ type = "mod", query = "", offset = 0, loader } = {}) {
+async function searchExtras({ type = "mod", query = "", offset = 0 } = {}) {
   ensurePackFolders();
-  const compat = packCompat();
-  const selected = normalizeLoader(loader) || compat.loader;
-  const mcVersion = compat.mcVersion;
+  const selected = "fabric";
+  const mcVersion = "1.21.1";
   const packIds = await packProjectIds();
   const extras = readExtras();
   const installedIds = new Set(extras.items.map((item) => item.id));
@@ -199,9 +199,11 @@ async function searchExtras({ type = "mod", query = "", offset = 0, loader } = {
         id: hit.project_id,
         slug: hit.slug,
         title: hit.title,
-        description: hitNote(hit, type),
+        description: hit.description || hitNote(hit, type),
         icon: hit.icon_url,
-        downloads: hit.downloads,
+        downloads: hit.downloads || 0,
+        follows: hit.follows || 0,
+        categories: hit.categories || [],
         type,
         loader: selected,
         serverSide: hit.server_side,
@@ -239,9 +241,11 @@ async function searchExtras({ type = "mod", query = "", offset = 0, loader } = {
     hasMore: apiOffset < total && hits.length > 0,
     total,
     compat: {
-      ...compat,
+      mcVersion,
+      loader: selected,
+      packLoader: "fabric",
       selectedLoader: selected,
-      label: `${loaderLabel(selected)} ${mcVersion}`,
+      label: "Fabric 1.21.1",
     },
   };
 }
@@ -299,11 +303,9 @@ async function ensureShaderMod(compat) {
   return installFile(helperId, "mod", compat);
 }
 
-async function installExtra(projectId, type, loader) {
+async function installExtra(projectId, type) {
   if (!projectId) throw new Error("Projeto inválido.");
-  const pack = packCompat();
-  const selected = normalizeLoader(loader) || pack.loader;
-  const compat = { ...pack, loader: selected };
+  const compat = { mcVersion: "1.21.1", loader: "fabric", packLoader: "fabric" };
   if (type === "shader") {
     await ensureShaderMod(compat);
   }

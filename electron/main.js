@@ -93,9 +93,9 @@ ipcMain.handle("game:play", async () => {
     send("game:progress", { phase: "java", message: "Preparando Java 21...", percent: 3 });
     const javaPath = await ensureJava(settings.javaPath, (progress) => send("game:progress", progress));
 
-    send("game:progress", { phase: "pack", message: settings.checkUpdatesOnPlay ? "Buscando atualização do pack..." : "Preparando o pack Sitrus...", percent: 10 });
+    send("game:progress", { phase: "pack", message: "Buscando atualização do pack...", percent: 10 });
     await ensurePack(pack.modrinthSlug, (progress) => send("game:progress", progress), {
-      checkUpdates: Boolean(settings.checkUpdatesOnPlay),
+      checkUpdates: true,
     });
 
     send("game:progress", { phase: "launch", message: "Abrindo o Minecraft...", percent: 96 });
@@ -130,7 +130,7 @@ ipcMain.handle("game:play", async () => {
 ipcMain.handle("extras:search", async (_e, payload) => searchExtras(payload || {}));
 ipcMain.handle("extras:install", async (_e, payload) => {
   try {
-    return await installExtra(payload?.id, payload?.type, payload?.loader);
+    return await installExtra(payload?.id, payload?.type);
   } catch (error) {
     console.error("extras:install", payload, error);
     throw error;

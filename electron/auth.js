@@ -30,14 +30,53 @@ function offlineUuid(name) {
 
 function publicAccount(account) {
   if (!account) return null;
+  const uuid = String(account.uuid || "").replaceAll("-", "");
+  const name = account.name;
   return {
     type: account.type,
-    name: account.name,
-    uuid: account.uuid,
-    avatar: account.uuid
-      ? `https://crafatar.com/avatars/${account.uuid.replaceAll("-", "")}?overlay=true`
-      : null,
+    name,
+    uuid,
+    avatar: uuid
+      ? `https://mc-heads.net/avatar/${uuid}/64`
+      : name
+        ? `https://mc-heads.net/avatar/${encodeURIComponent(name)}/64`
+        : null,
   };
+}
+
+async function fetchAvatarData(uuid, name) {
+  const id = String(uuid || "").replaceAll("-", "");
+  const nick = encodeURIComponent(name || "");
+  const urls = [
+    id ? `https://mc-heads.net/avatar/${id}/64` : null,
+    nick ? `https://mc-heads.net/avatar/${nick}/64` : null,
+    id ? `https://minotar.net/helm/${id}/64` : null,
+    nick ? `https://minotar.net/helm/${nick}/64` : null,
+  ].filter(Boolean);
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "SitrusLauncher" },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!res.ok) continue;
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (buf.length < 40) continue;
+      return `data:image/png;base64,${buf.toString("base64")}`;
+    } catch {
+      // tenta o próximo CDN
+    }
+  }
+  return null;
+}
+
+async function attachAvatar(account) {
+  const pub = publicAccount(account);
+  if (!pub) return null;
+  const data = await fetchAvatarData(pub.uuid, pub.name);
+  if (data) pub.avatar = data;
+  return pub;
 }
 
 function toMclc(account) {
@@ -69,7 +108,7 @@ function loginOffline(name) {
     clientToken: crypto.randomUUID(),
   };
   writeAccount(account);
-  return publicAccount(account);
+  return attachAvatar(account);
 }
 
 async function loginMicrosoft() {
@@ -87,13 +126,13 @@ async function loginMicrosoft() {
     mclc,
   };
   writeAccount(account);
-  return publicAccount(account);
+  return attachAvatar(account);
 }
 
 async function restoreAccount() {
   const saved = readAccount();
   if (!saved) return null;
-  if (saved.type !== "microsoft" || !saved.xbox) return publicAccount(saved);
+  if (saved.type !== "microsoft" || !saved.xbox) return attachAvatar(saved);
 
   try {
     const authManager = new Auth("select_account");
@@ -110,7 +149,7 @@ async function restoreAccount() {
       mclc,
     };
     writeAccount(account);
-    return publicAccount(account);
+    return attachAvatar(account);
   } catch {
     clearAccount();
     return null;

@@ -20,7 +20,6 @@ const ui = {
   closeOnPlay: document.getElementById("closeOnPlay"),
   serverAddress: document.getElementById("serverAddress"),
   playBtn: document.getElementById("playBtn"),
-  checkUpdates: document.getElementById("checkUpdates"),
   bar: document.getElementById("bar"),
   progress: document.getElementById("progress"),
   status: document.getElementById("status"),
@@ -32,7 +31,6 @@ const ui = {
   homeTab: document.getElementById("homeTab"),
   extrasTab: document.getElementById("extrasTab"),
   configTab: document.getElementById("configTab"),
-  configHint: document.getElementById("configAccountHint"),
   extrasSearch: document.getElementById("extrasSearch"),
   extrasList: document.getElementById("extrasList"),
   extrasHint: document.getElementById("extrasHint"),
@@ -45,7 +43,6 @@ const ui = {
   openExtrasFolderBtn: document.getElementById("openExtrasFolderBtn"),
   openPackFolderConfigBtn: document.getElementById("openPackFolderConfigBtn"),
   shareLogBtn: document.getElementById("shareLogBtn"),
-  shareLogHomeBtn: document.getElementById("shareLogHomeBtn"),
   shareLogHint: document.getElementById("shareLogHint"),
   shareLogResult: document.getElementById("shareLogResult"),
 };
@@ -58,8 +55,6 @@ let state = {
   extrasType: "mod",
   extrasQuery: "",
   extrasLoaded: false,
-  extrasLoader: "fabric",
-  packLoader: "fabric",
   extrasOffset: 0,
   extrasHasMore: false,
   extrasHits: [],
@@ -101,15 +96,35 @@ function renderAccount() {
       : "Iniciar o Sitrus Cobblemon";
   ui.playBtn.setAttribute("aria-busy", state.busy ? "true" : "false");
   if (ui.logoutBtn) ui.logoutBtn.hidden = !account;
-  if (ui.configHint) {
-    ui.configHint.textContent = account
-      ? `Conectado como ${account.name}. Trocar conta volta para o login.`
-      : "Entre na aba Jogar para conectar uma conta.";
-  }
   if (!account) return;
   ui.playerName.textContent = account.name;
   ui.accountType.textContent = account.type === "microsoft" ? "Conta Microsoft" : "Offline";
-  ui.avatar.src = account.avatar || "../assets/icon.png";
+  setAvatar(account);
+}
+
+function avatarUrls(account) {
+  const uuid = String(account?.uuid || "").replaceAll("-", "");
+  const name = encodeURIComponent(account?.name || "");
+  return [
+    account?.avatar,
+    uuid ? `https://mc-heads.net/avatar/${uuid}/64` : null,
+    name ? `https://mc-heads.net/avatar/${name}/64` : null,
+    uuid ? `https://crafatar.com/avatars/${uuid}?size=64&overlay` : null,
+    name ? `https://minotar.net/helm/${name}/64` : null,
+    "../assets/icon.png",
+  ].filter((url, index, list) => url && list.indexOf(url) === index);
+}
+
+function setAvatar(account) {
+  const img = ui.avatar;
+  if (!img || !account) return;
+  const urls = avatarUrls(account);
+  let index = 0;
+  img.onerror = () => {
+    index += 1;
+    if (index < urls.length) img.src = urls[index];
+  };
+  img.src = urls[0];
 }
 
 function bindSettings() {
@@ -117,7 +132,6 @@ function bindSettings() {
   ui.ram.value = settings.ramGb;
   ui.ramValue.textContent = settings.ramGb;
   ui.closeOnPlay.checked = settings.closeOnPlay;
-  ui.checkUpdates.checked = Boolean(settings.checkUpdatesOnPlay);
   ui.serverAddress.value = settings.serverAddress || "";
 }
 
@@ -125,7 +139,7 @@ async function persistSettings() {
   state.settings = await window.sitrus.saveSettings({
     ramGb: Number(ui.ram.value),
     closeOnPlay: ui.closeOnPlay.checked,
-    checkUpdatesOnPlay: ui.checkUpdates.checked,
+    checkUpdatesOnPlay: true,
     serverAddress: ui.serverAddress.value.trim(),
     lastTab: state.lastTab || "home",
   });
@@ -202,7 +216,6 @@ ui.ram.oninput = () => {
 };
 ui.ram.onchange = persistSettings;
 ui.closeOnPlay.onchange = persistSettings;
-ui.checkUpdates.onchange = persistSettings;
 ui.serverAddress.onchange = persistSettings;
 
 function showTab(tab) {
@@ -308,10 +321,7 @@ ui.playBtn.onclick = async () => {
   state.busy = true;
   renderAccount();
   await persistSettings();
-  setStatus(
-    ui.checkUpdates.checked ? "Buscando atualização e preparando o Sitrus..." : "Preparando o Sitrus...",
-    4
-  );
+  setStatus("Buscando atualização e preparando o Sitrus...", 4);
   const result = await window.sitrus.play();
   if (!result.ok) {
     state.busy = false;
@@ -320,35 +330,34 @@ ui.playBtn.onclick = async () => {
   }
 };
 
-function loaderName(loader) {
-  if (loader === "neoforge") return "NeoForge";
-  if (loader === "forge") return "Forge";
-  return "Fabric";
-}
-
 function extrasHint(total) {
-  const pack = loaderName(state.packLoader);
-  const selected = loaderName(state.extrasLoader);
   const count = typeof total === "number" ? ` ${total} resultados.` : "";
-  if (state.extrasLoader !== state.packLoader) {
-    return `O pack Sitrus é ${pack}. ${selected} não carrega neste jogo.${count}`;
-  }
   if (state.extrasType === "mod") {
-    return `Mods ${selected} ${state.pack?.mcVersion || "1.21.1"} compatíveis com o pack. O que já vem no Sitrus não aparece.${count}`;
+    return `Mods Fabric 1.21.1. O que já vem no Sitrus não aparece.${count}`;
   }
   if (state.extrasType === "resourcepack") {
-    return `Texturas para Minecraft ${state.pack?.mcVersion || "1.21.1"}. Ative no jogo em Opções > Resource Packs.${count}`;
+    return `Resource packs para Minecraft 1.21.1. Ative no jogo em Opções > Resource Packs.${count}`;
   }
-  return `Shaders compatíveis com ${selected === "Fabric" ? "Iris" : "Oculus"}. Ative no menu do shader no jogo.${count}`;
+  return `Shaders compatíveis com Iris. Ative no menu do shader no jogo.${count}`;
 }
 
-function setLoaderButtons() {
-  document.querySelectorAll(".filter-loader").forEach((button) => {
-    const selected = button.dataset.loader === state.extrasLoader;
-    button.classList.toggle("active", selected);
-    button.setAttribute("aria-pressed", selected ? "true" : "false");
-    button.dataset.pack = button.dataset.loader === state.packLoader ? "true" : "false";
-  });
+function formatCount(value) {
+  const num = Number(value) || 0;
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  if (num >= 1_000) return `${(num / 1_000).toFixed(1).replace(/\.0$/, "")}k`;
+  return String(num);
+}
+
+function extraTags(item) {
+  const skip = new Set(["fabric", "forge", "neoforge", "quilt", "iris", "optifine", "minecraft"]);
+  const cats = (item.categories || []).filter((cat) => !skip.has(String(cat).toLowerCase())).slice(0, 3);
+  const tags = [];
+  if (item.installed) tags.push({ text: "Instalado", kind: "installed" });
+  if (item.downloads) tags.push({ text: `${formatCount(item.downloads)} downloads` });
+  for (const cat of cats) tags.push({ text: cat });
+  return tags
+    .map((tag) => `<span class="extra-tag${tag.kind ? ` ${tag.kind}` : ""}">${escapeHtml(tag.text)}</span>`)
+    .join("");
 }
 
 function renderExtras(hits, { append = false, hasMore = false } = {}) {
@@ -362,18 +371,19 @@ function renderExtras(hits, { append = false, hasMore = false } = {}) {
   }
   const cards = hits
     .map((item) => {
-      const desc = escapeHtml((item.description || "").slice(0, 110));
+      const desc = escapeHtml((item.description || "").slice(0, 140));
       const title = escapeHtml(item.title);
       const icon = escapeHtml(item.icon || "../assets/icon.png");
-      const mismatch = item.loader && item.loader !== state.packLoader;
+      const tags = extraTags(item);
       const action = item.installed
         ? `<button type="button" class="remove" data-id="${escapeHtml(item.id)}" data-action="remove" aria-label="Remover ${title}">Remover</button>`
         : `<button type="button" data-id="${escapeHtml(item.id)}" data-type="${escapeHtml(item.type)}" data-action="install" aria-label="Instalar ${title}">Instalar</button>`;
       return `<article class="extra-item">
-        <img src="${icon}" alt="${title}" />
+        <img src="${icon}" alt="" onerror="this.onerror=null;this.src='../assets/icon.png'" />
         <div>
           <strong>${title}</strong>
-          <small>${desc}${mismatch ? ` · ${escapeHtml(loaderName(item.loader))}` : ""}</small>
+          <small>${desc}</small>
+          ${tags ? `<div class="extra-meta">${tags}</div>` : ""}
         </div>
         ${action}
       </article>`;
@@ -400,12 +410,10 @@ async function loadExtras({ append = false } = {}) {
       type: state.extrasType,
       query: state.extrasQuery,
       offset: append ? state.extrasOffset : 0,
-      loader: state.extrasLoader,
     });
     state.extrasLoaded = true;
     state.extrasOffset = data.offset || 0;
     state.extrasHasMore = Boolean(data.hasMore);
-    if (data.compat?.packLoader) state.packLoader = data.compat.packLoader;
     const hits = data.hits || [];
     state.extrasHits = append ? state.extrasHits.concat(hits) : hits;
     ui.extrasHint.textContent = extrasHint(data.total);
@@ -428,14 +436,6 @@ document.querySelectorAll(".filter-type").forEach((button) => {
     button.classList.add("active");
     button.setAttribute("aria-pressed", "true");
     state.extrasType = button.dataset.type;
-    loadExtras();
-  };
-});
-
-document.querySelectorAll(".filter-loader").forEach((button) => {
-  button.onclick = () => {
-    state.extrasLoader = button.dataset.loader;
-    setLoaderButtons();
     loadExtras();
   };
 });
@@ -468,12 +468,6 @@ ui.extrasList.addEventListener("click", async (event) => {
     const ok = window.confirm("Remover este extra do launcher? Você pode instalar de novo depois.");
     if (!ok) return;
   }
-  if (action === "install" && state.extrasLoader !== state.packLoader) {
-    const ok = window.confirm(
-      `O pack Sitrus é ${loaderName(state.packLoader)}. Instalar um extra ${loaderName(state.extrasLoader)} pode não abrir no jogo. Continuar?`
-    );
-    if (!ok) return;
-  }
   button.disabled = true;
   try {
     if (action === "install") {
@@ -482,7 +476,6 @@ ui.extrasList.addEventListener("click", async (event) => {
       await window.sitrus.installExtra({
         id,
         type: button.dataset.type || state.extrasType,
-        loader: state.extrasLoader,
       });
     } else {
       button.textContent = "Removendo...";
@@ -509,7 +502,7 @@ ui.openPackFolderConfigBtn?.addEventListener("click", () => openPackFolder("root
 ui.openExtrasFolderBtn?.addEventListener("click", () => openPackFolder(state.extrasType));
 
 async function shareGameLog() {
-  const buttons = [ui.shareLogBtn, ui.shareLogHomeBtn].filter(Boolean);
+  const buttons = [ui.shareLogBtn].filter(Boolean);
   const hint = ui.shareLogHint;
   const result = ui.shareLogResult;
   buttons.forEach((button) => {
@@ -554,7 +547,6 @@ async function shareGameLog() {
 }
 
 ui.shareLogBtn?.addEventListener("click", shareGameLog);
-ui.shareLogHomeBtn?.addEventListener("click", shareGameLog);
 
 ui.shareLogResult?.addEventListener("click", (event) => {
   const link = event.target.closest("a");
@@ -572,7 +564,7 @@ window.sitrus.onClosed((data) => {
   renderAccount();
   const code = Number(data?.code) || 0;
   if (code !== 0) {
-    setStatus(`O jogo fechou (código ${code}). Envie o log pelo mclo.gs se precisar de ajuda.`, 0, true);
+    setStatus(`O jogo fechou (código ${code}). Envie o log na aba Config se precisar de ajuda.`, 0, true);
   } else {
     setStatus("Jogo fechado. Pode jogar de novo quando quiser.", 0);
   }
@@ -627,17 +619,9 @@ async function boot() {
   if (ui.launcherVersion) {
     ui.launcherVersion.textContent = data.launcherVersion || "dev";
   }
-  if (data.compat?.loader) {
-    state.packLoader = data.compat.loader;
-    state.extrasLoader = data.compat.loader;
-    if (data.compat.mcVersion) state.pack = { ...(state.pack || {}), mcVersion: data.compat.mcVersion };
-    setLoaderButtons();
-  }
-  const loaderText = loaderName(state.packLoader);
-  const mcText = data.compat?.mcVersion || "1.21.1";
   ui.packVersion.textContent = latest
-    ? `Pack ${latest} · ${loaderText} ${mcText}`
-    : `Pack Sitrus · ${loaderText} ${mcText}`;
+    ? `Pack ${latest} · Fabric 1.21.1`
+    : "Pack Sitrus · Fabric 1.21.1";
 }
 
 boot().catch((error) => setStatus(error.message, 0, true));

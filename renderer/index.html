@@ -92,19 +92,15 @@
               </div>
               <div id="loggedIn" hidden>
                 <div class="who">
-                  <img id="avatar" alt="Avatar do jogador" />
-                  <div>
+                  <img id="avatar" alt="Avatar do jogador" referrerpolicy="no-referrer" />
+                  <div class="who-copy">
                     <strong id="playerName">Jogador</strong>
                     <small id="accountType">conta</small>
                   </div>
+                  <button type="button" id="logoutBtn" class="ghost">Trocar conta</button>
                 </div>
               </div>
             </section>
-
-            <label class="check update-check" for="checkUpdates">
-              <input id="checkUpdates" type="checkbox" />
-              Buscar atualização do modpack
-            </label>
 
             <div class="launch-block">
               <button type="button" id="playBtn" class="play" disabled title="Entre com uma conta para jogar">Entrar para jogar</button>
@@ -112,41 +108,37 @@
                 <div id="bar"></div>
               </div>
               <p id="status" role="status" aria-live="polite">Pronto quando você estiver.</p>
-              <button type="button" id="shareLogHomeBtn" class="ghost">Enviar log (mclo.gs)</button>
             </div>
           </div>
 
           <div id="extrasTab" class="tab-page" hidden role="tabpanel" aria-labelledby="extrasTabBtn">
             <section class="card extras-card">
-              <h2>Extras</h2>
-              <p>Mods, texturas e shaders do Modrinth. O filtro de loader segue o pack (Sitrus é Fabric). Forge e NeoForge só servem se o pack for desses loaders.</p>
+              <div class="extras-head">
+                <div>
+                  <h2>Extras</h2>
+                  <p>Catálogo no estilo Modrinth, travado em <strong>Fabric 1.21.1</strong>. O que já vem no pack Sitrus não aparece.</p>
+                </div>
+                <span class="compat-chip">Fabric 1.21.1</span>
+              </div>
               <div class="filters" role="group" aria-label="Tipo de extra">
                 <button type="button" class="filter filter-type active" data-type="mod" aria-pressed="true">Mods</button>
-                <button type="button" class="filter filter-type" data-type="resourcepack" aria-pressed="false">Texturas</button>
+                <button type="button" class="filter filter-type" data-type="resourcepack" aria-pressed="false">Resource packs</button>
                 <button type="button" class="filter filter-type" data-type="shader" aria-pressed="false">Shaders</button>
               </div>
-              <div class="filters" role="group" aria-label="Loader compatível">
-                <button type="button" class="filter filter-loader active" data-loader="fabric" aria-pressed="true">Fabric</button>
-                <button type="button" class="filter filter-loader" data-loader="forge" aria-pressed="false">Forge</button>
-                <button type="button" class="filter filter-loader" data-loader="neoforge" aria-pressed="false">NeoForge</button>
+              <div class="extras-search-row">
+                <label class="sr-only" for="extrasSearch">Buscar extras no Modrinth</label>
+                <input id="extrasSearch" type="search" placeholder="Buscar no Modrinth..." autocomplete="off" />
               </div>
               <div class="extras-toolbar">
                 <button type="button" id="openPackFolderBtn" class="ghost">Abrir pasta do pack</button>
                 <button type="button" id="openExtrasFolderBtn" class="ghost">Abrir pasta deste extra</button>
               </div>
-              <label class="sr-only" for="extrasSearch">Buscar extras no Modrinth</label>
-              <input id="extrasSearch" type="search" placeholder="Buscar no Modrinth..." autocomplete="off" />
               <p id="extrasHint" class="hint" role="note"></p>
               <div id="extrasList" class="extras-list scroll" tabindex="0" aria-label="Lista de extras"></div>
             </section>
           </div>
 
           <div id="configTab" class="tab-page scroll" hidden role="tabpanel" aria-labelledby="configTabBtn">
-            <section class="card" id="configAccountCard">
-              <h2>Conta</h2>
-              <p id="configAccountHint">Entre na aba Jogar para conectar uma conta.</p>
-              <button type="button" id="logoutBtn" class="ghost" hidden>Trocar conta</button>
-            </section>
             <section class="card">
               <h2>Configurações</h2>
               <p>Ajuste memória, conexão e comportamento do launcher.</p>
@@ -178,12 +170,12 @@
               <h2>Ajuda rápida</h2>
               <ul class="help-list">
                 <li>Teclas <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> trocam Jogar, Extras e Config.</li>
-                <li>Na lista de extras, role com o mouse ou a barra laranja.</li>
+                <li>Jogar busca atualização do pack automaticamente. Trocar conta fica no perfil.</li>
+                <li>Extras lista só Fabric 1.21.1. O que já vem no Sitrus não aparece.</li>
                 <li>Remover um extra pede confirmação para não apagar sem querer.</li>
                 <li>Wiki, loja e Discord abrem no navegador.</li>
                 <li>O Setup baixa atualização do launcher sozinho. A versão portátil precisa baixar de novo.</li>
-                <li>Em Extras ou Config, abra a pasta raiz do pack instalado neste PC.</li>
-                <li>Se o jogo fechar errado, envie o log pelo mclo.gs e compartilhe o link.</li>
+                <li>Se o jogo fechar errado, envie o log nesta aba (mclo.gs) e compartilhe o link.</li>
               </ul>
             </section>
           </div>

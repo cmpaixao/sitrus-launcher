@@ -29,7 +29,7 @@ function defaultSettings() {
     javaPath: "",
     serverAddress: pack.server?.address || "",
     serverPort: pack.server?.port || 25565,
-    checkUpdatesOnPlay: false,
+    checkUpdatesOnPlay: true,
     lastTab: "home",
   };
 }
