@@ -45,19 +45,12 @@ function launchGame({ account, javaPath, ramGb, server, onProgress, onLog, onClo
       max: `${Math.max(2, Number(ramGb) || 4)}G`,
       min: "1G",
     },
+    customLaunchArgs: host ? ["--quickPlayMultiplayer", `${host}:${port}`] : [],
     overrides: {
       detached: false,
       gameDirectory: minecraftRoot(),
       cwd: minecraftRoot(),
     },
-    ...(host
-      ? {
-          quickPlay: {
-            type: "multiplayer",
-            identifier: `${host}:${port}`,
-          },
-        }
-      : {}),
   };
 
   launcher.launch(opts);
