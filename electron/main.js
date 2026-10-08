@@ -12,9 +12,10 @@ const { loadPackConfig, loadSettings, saveSettings } = require("./settings");
 const { ensureJava } = require("./java");
 const { ensurePack, packStatus } = require("./installer");
 const { launchGame } = require("./game");
-const { searchExtras, installExtra, removeExtra, packFolder, packCompat } = require("./extras");
+const { searchExtras, listExtraVersions, installExtra, applyExtras, removeExtra, packFolder, packCompat } = require("./extras");
 const { setupAutoUpdate } = require("./updater");
 const { shareLatestLog } = require("./logs");
+const { pingServer } = require("./status");
 
 app.setName("Sitrus Launcher");
 if (process.platform === "win32") {
@@ -34,8 +35,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1180,
     height: 720,
-    minWidth: 1040,
-    minHeight: 640,
+    minWidth: 1100,
+    minHeight: 680,
     frame: false,
     backgroundColor: "#0E0C0A",
     icon: path.join(__dirname, "..", "assets", "icon.ico"),
@@ -69,7 +70,8 @@ ipcMain.handle("app:bootstrap", async () => {
   const settings = loadSettings();
   const account = await restoreAccount();
   const status = await packStatus(pack.modrinthSlug);
-  return { pack, settings, account, status, launcherVersion: app.getVersion(), compat: packCompat() };
+  const server = await pingServer(settings.serverAddress, settings.serverPort);
+  return { pack, settings, account, status, server, launcherVersion: app.getVersion(), compat: packCompat() };
 });
 
 ipcMain.handle("settings:save", (_e, partial) => saveSettings(partial));
@@ -97,6 +99,9 @@ ipcMain.handle("game:play", async () => {
     await ensurePack(pack.modrinthSlug, (progress) => send("game:progress", progress), {
       checkUpdates: true,
     });
+
+    send("game:progress", { phase: "extras", message: "Reaplicando extras do jogador...", percent: 92 });
+    applyExtras();
 
     send("game:progress", { phase: "launch", message: "Abrindo o Minecraft...", percent: 96 });
     launchGame({
@@ -128,13 +133,18 @@ ipcMain.handle("game:play", async () => {
 });
 
 ipcMain.handle("extras:search", async (_e, payload) => searchExtras(payload || {}));
+ipcMain.handle("extras:versions", async (_e, payload) => listExtraVersions(payload?.id, payload?.type));
 ipcMain.handle("extras:install", async (_e, payload) => {
   try {
-    return await installExtra(payload?.id, payload?.type);
+    return await installExtra(payload?.id, payload?.type, payload?.versionId);
   } catch (error) {
     console.error("extras:install", payload, error);
     throw error;
   }
+});
+ipcMain.handle("server:status", async () => {
+  const settings = loadSettings();
+  return pingServer(settings.serverAddress, settings.serverPort);
 });
 ipcMain.handle("extras:remove", async (_e, id) => removeExtra(id));
 ipcMain.handle("app:openFolder", async (_e, kind) => {

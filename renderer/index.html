@@ -22,27 +22,30 @@
 
       <main class="layout" id="layout">
         <section class="showcase">
-          <div class="slider" id="slider" aria-roledescription="carrossel" aria-label="Prints do Sitrus Cobblemon">
+          <div class="slider" id="slider" aria-roledescription="carrossel" aria-label="Prints oficiais do Cobblemon">
             <div class="slides">
-              <figure class="slide is-active">
-                <img src="../assets/slides/01.jpg" alt="Print do Sitrus Cobblemon 1" />
-              </figure>
-              <figure class="slide">
-                <img src="../assets/slides/02.jpg" alt="Print do Sitrus Cobblemon 2" />
-              </figure>
-              <figure class="slide">
-                <img src="../assets/slides/03.jpg" alt="Print do Sitrus Cobblemon 3" />
-              </figure>
-              <figure class="slide">
-                <img src="../assets/slides/04.jpg" alt="Print do Sitrus Cobblemon 4" />
-              </figure>
+              <figure class="slide is-active"><img src="../assets/slides/01.webp" alt="Batalha Cobblemon" /></figure>
+              <figure class="slide"><img src="../assets/slides/02.png" alt="Batalha dupla Cobblemon" /></figure>
+              <figure class="slide"><img src="../assets/slides/03.png" alt="Montaria Cobblemon" /></figure>
+              <figure class="slide"><img src="../assets/slides/04.png" alt="Habitat Cobblemon" /></figure>
+              <figure class="slide"><img src="../assets/slides/05.webp" alt="Torre Cobblemon" /></figure>
+              <figure class="slide"><img src="../assets/slides/06.png" alt="Gameplay Cobblemon" /></figure>
+              <figure class="slide"><img src="../assets/slides/07.png" alt="Charizard no Cobblemon" /></figure>
+              <figure class="slide"><img src="../assets/slides/08.png" alt="Alpha Steelix no Cobblemon" /></figure>
+            </div>
+            <div class="account-chip" id="accountChip" hidden>
+              <img id="chipAvatar" alt="Avatar do jogador" referrerpolicy="no-referrer" />
+              <div>
+                <strong id="chipName">Jogador</strong>
+                <small id="chipType">conta</small>
+              </div>
             </div>
             <div class="hero-copy">
               <p class="eyebrow">Cobblemon · Fabric 1.21.1</p>
               <h1>Sitrus Cobblemon</h1>
               <p class="lede">
-                Pack oficial do servidor. O launcher instala o Fabric, o Minecraft 1.21.1
-                e os mods do Modrinth pra você só clicar em Jogar.
+                Pack oficial do servidor. Java, Fabric e os mods entram sozinhos.
+                Você só escolhe a conta e clica em Jogar.
               </p>
               <div class="meta">
                 <span id="packVersion">Pack —</span>
@@ -54,15 +57,28 @@
               <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 2"></button>
               <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 3"></button>
               <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 4"></button>
+              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 5"></button>
+              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 6"></button>
+              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 7"></button>
+              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 8"></button>
             </div>
             <button type="button" class="slider-nav prev" aria-label="Print anterior">‹</button>
             <button type="button" class="slider-nav next" aria-label="Próxima print">›</button>
           </div>
-          <div class="links">
-            <button type="button" id="discordBtn" title="Abre o Discord no navegador">Discord</button>
-            <button type="button" id="wikiBtn" title="Abre a wiki no navegador">Wiki</button>
-            <button type="button" id="storeBtn" title="Abre a loja no navegador">Loja</button>
-            <button type="button" id="modrinthBtn" title="Abre o pack no Modrinth">Página do pack</button>
+          <div class="dock">
+            <div class="server-status" id="serverStatus" aria-live="polite">
+              <span class="server-dot" id="serverDot"></span>
+              <div>
+                <strong id="serverLabel">Sitrus Cobblemon</strong>
+                <small id="serverPlayers">Checando jogadores...</small>
+              </div>
+            </div>
+            <div class="links">
+              <button type="button" id="discordBtn" title="Abre o Discord no navegador">Discord</button>
+              <button type="button" id="wikiBtn" title="Abre a wiki no navegador">Wiki</button>
+              <button type="button" id="storeBtn" title="Abre a loja no navegador">Loja</button>
+              <button type="button" id="modrinthBtn" title="Abre o pack no Modrinth">Pack</button>
+            </div>
           </div>
         </section>
 
@@ -103,7 +119,7 @@
             </section>
 
             <div class="launch-block">
-              <button type="button" id="playBtn" class="play" disabled title="Entre com uma conta para jogar">Entrar para jogar</button>
+              <button type="button" id="playBtn" class="play" disabled title="Entre com uma conta para jogar">JOGAR</button>
               <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="status" id="progress" hidden>
                 <div id="bar"></div>
               </div>
@@ -116,19 +132,28 @@
               <div class="extras-head">
                 <div>
                   <h2>Extras</h2>
-                  <p>Catálogo no estilo Modrinth, travado em <strong>Fabric 1.21.1</strong>. O que já vem no pack Sitrus não aparece.</p>
+                  <p>Catálogo no estilo Modrinth, só <strong>Fabric 1.21.1</strong>. Extras ficam salvos fora do pack: atualizar o Sitrus não apaga o que você baixou. Texturas e shaders ligam sozinhos no jogo.</p>
                 </div>
                 <span class="compat-chip">Fabric 1.21.1</span>
               </div>
               <div class="filters" role="group" aria-label="Tipo de extra">
                 <button type="button" class="filter filter-type active" data-type="mod" aria-pressed="true">Mods</button>
-                <button type="button" class="filter filter-type" data-type="resourcepack" aria-pressed="false">Resource packs</button>
+                <button type="button" class="filter filter-type" data-type="resourcepack" aria-pressed="false">Texturas</button>
                 <button type="button" class="filter filter-type" data-type="shader" aria-pressed="false">Shaders</button>
               </div>
-              <div class="extras-search-row">
+              <div class="extras-search-row extras-controls">
                 <label class="sr-only" for="extrasSearch">Buscar extras no Modrinth</label>
                 <input id="extrasSearch" type="search" placeholder="Buscar no Modrinth..." autocomplete="off" />
+                <label class="sr-only" for="extrasSort">Ordenar</label>
+                <select id="extrasSort" aria-label="Ordenar extras">
+                  <option value="downloads">Mais baixados</option>
+                  <option value="follows">Mais seguidos</option>
+                  <option value="updated">Atualizados</option>
+                  <option value="newest">Mais novos</option>
+                  <option value="relevance">Relevância</option>
+                </select>
               </div>
+              <div class="filters category-filters" id="extrasCategories" role="group" aria-label="Categorias"></div>
               <div class="extras-toolbar">
                 <button type="button" id="openPackFolderBtn" class="ghost">Abrir pasta do pack</button>
                 <button type="button" id="openExtrasFolderBtn" class="ghost">Abrir pasta deste extra</button>
@@ -138,46 +163,54 @@
             </section>
           </div>
 
-          <div id="configTab" class="tab-page scroll" hidden role="tabpanel" aria-labelledby="configTabBtn">
-            <section class="card">
-              <h2>Configurações</h2>
-              <p>Ajuste memória, conexão e comportamento do launcher.</p>
-              <label class="ram" for="ram">
-                <span>Memória RAM</span>
-                <strong><span id="ramValue">4</span> GB</strong>
-              </label>
-              <input id="ram" type="range" min="2" max="12" step="1" value="4" aria-valuemin="2" aria-valuemax="12" />
-              <p class="hint">4 GB serve na maioria dos PCs. Suba se o jogo fechar por falta de memória.</p>
-              <label class="check" for="closeOnPlay">
-                <input id="closeOnPlay" type="checkbox" />
-                Esconder o launcher ao abrir o jogo
-              </label>
-              <label class="field" for="serverAddress">
-                IP do servidor
-                <input id="serverAddress" placeholder="sitruscobblemon.com" spellcheck="false" />
-              </label>
-              <p class="hint">Launcher <span id="launcherVersion">—</span>. Quem instalou pelo Setup atualiza sozinho quando sair versão nova.</p>
-              <button type="button" id="openPackFolderConfigBtn" class="ghost">Abrir pasta do pack</button>
-            </section>
-            <section class="card" id="supportCard">
-              <h2>Suporte</h2>
-              <p>Envia o último log do jogo para o mclo.gs. O link é copiado e você pode colar no Discord.</p>
-              <button type="button" id="shareLogBtn" class="ghost">Enviar log (mclo.gs)</button>
-              <p id="shareLogHint" class="hint" role="status"></p>
-              <div id="shareLogResult" class="log-result" hidden></div>
-            </section>
-            <section class="card">
-              <h2>Ajuda rápida</h2>
-              <ul class="help-list">
-                <li>Teclas <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> trocam Jogar, Extras e Config.</li>
-                <li>Jogar busca atualização do pack automaticamente. Trocar conta fica no perfil.</li>
-                <li>Extras lista só Fabric 1.21.1. O que já vem no Sitrus não aparece.</li>
-                <li>Remover um extra pede confirmação para não apagar sem querer.</li>
-                <li>Wiki, loja e Discord abrem no navegador.</li>
-                <li>O Setup baixa atualização do launcher sozinho. A versão portátil precisa baixar de novo.</li>
-                <li>Se o jogo fechar errado, envie o log nesta aba (mclo.gs) e compartilhe o link.</li>
-              </ul>
-            </section>
+          <div id="configTab" class="tab-page" hidden role="tabpanel" aria-labelledby="configTabBtn">
+            <div class="settings-shell">
+              <nav class="settings-nav" aria-label="Configurações">
+                <button type="button" class="settings-nav-item active" data-settings="minecraft">Minecraft</button>
+                <button type="button" class="settings-nav-item" data-settings="support">Suporte</button>
+                <button type="button" class="settings-nav-item" data-settings="help">Ajuda</button>
+              </nav>
+              <div class="settings-pages scroll">
+                <section class="card settings-page" data-settings-page="minecraft">
+                  <h2>Minecraft</h2>
+                  <p>Ajuste memória, conexão e comportamento do launcher.</p>
+                  <label class="ram" for="ram">
+                    <span>Memória RAM</span>
+                    <strong><span id="ramValue">4</span> GB</strong>
+                  </label>
+                  <input id="ram" type="range" min="2" max="12" step="1" value="4" aria-valuemin="2" aria-valuemax="12" />
+                  <p class="hint">4 GB serve na maioria dos PCs. Suba se o jogo fechar por falta de memória.</p>
+                  <label class="check" for="closeOnPlay">
+                    <input id="closeOnPlay" type="checkbox" />
+                    Esconder o launcher ao abrir o jogo
+                  </label>
+                  <label class="field" for="serverAddress">
+                    IP do servidor
+                    <input id="serverAddress" placeholder="sitruscobblemon.com" spellcheck="false" />
+                  </label>
+                  <p class="hint">Launcher <span id="launcherVersion">—</span>. Quem instalou pelo Setup atualiza sozinho quando sair versão nova.</p>
+                  <button type="button" id="openPackFolderConfigBtn" class="ghost">Abrir pasta do pack</button>
+                </section>
+                <section class="card settings-page" data-settings-page="support" hidden>
+                  <h2>Suporte</h2>
+                  <p>Envia o último log do jogo para o mclo.gs. O link é copiado e você pode colar no Discord.</p>
+                  <button type="button" id="shareLogBtn" class="ghost">Enviar log (mclo.gs)</button>
+                  <p id="shareLogHint" class="hint" role="status"></p>
+                  <div id="shareLogResult" class="log-result" hidden></div>
+                </section>
+                <section class="card settings-page" data-settings-page="help" hidden>
+                  <h2>Ajuda rápida</h2>
+                  <ul class="help-list">
+                    <li>Teclas <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> trocam Jogar, Extras e Config.</li>
+                    <li>Jogar busca atualização do pack automaticamente. Trocar conta fica no perfil.</li>
+                    <li>Em Extras, filtre por tipo e categoria. Abra Versões para ver todas as builds do Modrinth.</li>
+                    <li>Só instala extra Fabric 1.21.1, para não quebrar o pack Sitrus.</li>
+                    <li>Wiki, loja e Discord abrem no navegador.</li>
+                    <li>Se o jogo fechar errado, envie o log nesta aba (mclo.gs) e compartilhe o link.</li>
+                  </ul>
+                </section>
+              </div>
+            </div>
           </div>
         </aside>
       </main>

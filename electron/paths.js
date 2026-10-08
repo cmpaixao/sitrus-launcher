@@ -29,6 +29,10 @@ function extrasFile() {
   return path.join(userData(), "extras.json");
 }
 
+function extrasRoot() {
+  return path.join(userData(), "extras");
+}
+
 function configPath() {
   return path.join(app.getAppPath(), "sitrus.config.json");
 }
@@ -41,5 +45,6 @@ module.exports = {
   settingsFile,
   instanceFile,
   extrasFile,
+  extrasRoot,
   configPath,
 };

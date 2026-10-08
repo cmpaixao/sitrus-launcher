@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const extractZip = require("extract-zip");
-const { minecraftRoot, instanceFile } = require("./paths");
+const { minecraftRoot, instanceFile, extrasFile } = require("./paths");
 
 const UA = "SitrusLauncher/1.0.0 (https://modrinth.com/modpack/sitrus-cobblemon)";
 const MODRINTH = "https://api.modrinth.com/v2";
@@ -98,6 +98,15 @@ async function latestFabricLoader(mcVersion) {
   const stable = loaders.find((item) => item.loader?.stable) || loaders[0];
   if (!stable) throw new Error("Não achei Fabric Loader para 1.21.1.");
   return stable.loader.version;
+}
+
+function extraFilenames() {
+  try {
+    const data = JSON.parse(fs.readFileSync(extrasFile(), "utf8"));
+    return new Set((data.items || []).map((item) => item.filename).filter(Boolean));
+  } catch {
+    return new Set();
+  }
 }
 
 function readInstance() {
@@ -207,10 +216,12 @@ async function ensurePack(slug, onProgress, options = {}) {
     });
   });
 
+  const extraNames = extraFilenames();
   if (installed?.managedFiles?.length) {
     for (const rel of installed.managedFiles) {
       if (managed.includes(rel)) continue;
       const stale = path.join(root, rel.replaceAll("/", path.sep));
+      if (extraNames.has(path.basename(stale))) continue;
       if (fs.existsSync(stale)) fs.rmSync(stale, { force: true });
     }
   }

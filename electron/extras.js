@@ -1,10 +1,11 @@
 const fs = require("fs");
 const path = require("path");
-const { minecraftRoot, extrasFile } = require("./paths");
+const { minecraftRoot, extrasFile, extrasRoot } = require("./paths");
 const { fetchJson, downloadToFile, readInstance } = require("./installer");
 
 const MODRINTH = "https://api.modrinth.com/v2";
 const IRIS_ID = "YL57xq9U";
+const IRIS_VERSION_ID = "zsoi0dso";
 const OCULUS_SLUG = "oculus";
 const LOADERS = ["fabric", "forge", "neoforge"];
 const FOLDERS = {
@@ -49,6 +50,25 @@ function extraFolder(type) {
   const folder = path.join(minecraftRoot(), name);
   fs.mkdirSync(folder, { recursive: true });
   return folder;
+}
+
+function extrasVault(type) {
+  const name = FOLDERS[type];
+  if (!name) throw new Error("Tipo de extra inválido.");
+  const folder = path.join(extrasRoot(), name);
+  fs.mkdirSync(folder, { recursive: true });
+  return folder;
+}
+
+function extraPath(type, filename, where = "game") {
+  return path.join(where === "vault" ? extrasVault(type) : extraFolder(type), filename);
+}
+
+function copyIfNeeded(from, to) {
+  if (!from || !to || !fs.existsSync(from)) return false;
+  fs.mkdirSync(path.dirname(to), { recursive: true });
+  fs.copyFileSync(from, to);
+  return true;
 }
 
 function ensurePackFolders() {
@@ -116,16 +136,68 @@ async function packProjectIds() {
   }
 }
 
-function facetsFor(type, { loader, mcVersion }) {
+const CATEGORIES = {
+  mod: [
+    ["adventure", "Aventura"],
+    ["decoration", "Decoração"],
+    ["equipment", "Equipamento"],
+    ["food", "Comida"],
+    ["game-mechanics", "Mecânicas"],
+    ["magic", "Magia"],
+    ["mobs", "Mobs"],
+    ["optimization", "Otimização"],
+    ["social", "Social"],
+    ["storage", "Armazenamento"],
+    ["technology", "Tecnologia"],
+    ["transportation", "Transporte"],
+    ["utility", "Utilidade"],
+    ["worldgen", "Mundo"],
+  ],
+  resourcepack: [
+    ["combat", "Combate"],
+    ["cursed", "Cursed"],
+    ["decoration", "Decoração"],
+    ["modded", "Modded"],
+    ["realistic", "Realista"],
+    ["simplistic", "Simples"],
+    ["themed", "Temático"],
+    ["tweaks", "Tweaks"],
+    ["utility", "Utilidade"],
+    ["vanilla-like", "Vanilla-like"],
+  ],
+  shader: [
+    ["cartoon", "Cartoon"],
+    ["cursed", "Cursed"],
+    ["fantasy", "Fantasia"],
+    ["realistic", "Realista"],
+    ["vanilla-like", "Vanilla-like"],
+  ],
+};
+
+const SORTS = ["relevance", "downloads", "follows", "updated", "newest"];
+
+function facetsFor(type, { loader, mcVersion, category }) {
   const versions = [`versions:${mcVersion}`];
   if (mcVersion.startsWith("1.21")) versions.push("versions:1.21");
+  const facets = [];
   if (type === "mod") {
-    return [["project_type:mod"], [`versions:${mcVersion}`], [`categories:${loader}`]];
+    facets.push(["project_type:mod"], [`versions:${mcVersion}`], [`categories:${loader}`]);
+  } else if (type === "resourcepack") {
+    facets.push(["project_type:resourcepack"], versions);
+  } else {
+    facets.push(["project_type:shader"], ["categories:iris", "categories:optifine"]);
   }
-  if (type === "resourcepack") {
-    return [["project_type:resourcepack"], versions];
-  }
-  return [["project_type:shader"], ["categories:iris", "categories:optifine"]];
+  if (category) facets.push([`categories:${category}`]);
+  return facets;
+}
+
+function isCompatibleVersion(version, type) {
+  const games = version.game_versions || [];
+  const loaders = (version.loaders || []).map((item) => String(item).toLowerCase());
+  if (type === "mod") return loaders.includes("fabric") && games.includes("1.21.1");
+  if (type === "resourcepack") return games.includes("1.21.1") || games.includes("1.21");
+  if (type === "shader") return loaders.includes("iris") || loaders.includes("optifine") || !loaders.length;
+  return false;
 }
 
 function keepHit(hit, type, packIds) {
@@ -167,7 +239,7 @@ async function pickVersion(projectId, type, { loader, mcVersion }) {
   return null;
 }
 
-async function searchExtras({ type = "mod", query = "", offset = 0 } = {}) {
+async function searchExtras({ type = "mod", query = "", offset = 0, category = "", sort = "" } = {}) {
   ensurePackFolders();
   const selected = "fabric";
   const mcVersion = "1.21.1";
@@ -180,13 +252,15 @@ async function searchExtras({ type = "mod", query = "", offset = 0 } = {}) {
   let total = 0;
   const pageSize = 50;
   const startOffset = apiOffset;
+  const index = SORTS.includes(sort) ? sort : query.trim() ? "relevance" : "downloads";
+  const cat = String(category || "").trim();
 
   while (hits.length < wanted && apiOffset < startOffset + 400) {
     const params = new URLSearchParams({
       limit: String(pageSize),
       offset: String(apiOffset),
-      index: query.trim() ? "relevance" : "downloads",
-      facets: JSON.stringify(facetsFor(type, { loader: selected, mcVersion })),
+      index,
+      facets: JSON.stringify(facetsFor(type, { loader: selected, mcVersion, category: cat })),
     });
     if (query.trim()) params.set("query", query.trim());
 
@@ -246,29 +320,205 @@ async function searchExtras({ type = "mod", query = "", offset = 0 } = {}) {
       packLoader: "fabric",
       selectedLoader: selected,
       label: "Fabric 1.21.1",
+      categories: CATEGORIES[type] || [],
+      sort: index,
+      category: cat,
     },
   };
 }
 
-async function installFile(projectId, type, compat) {
+async function listExtraVersions(projectId, type = "mod") {
+  if (!projectId) throw new Error("Projeto inválido.");
+  const project = await fetchJson(`${MODRINTH}/project/${projectId}`);
+  const versions = await fetchJson(`${MODRINTH}/project/${projectId}/version`);
+  const extras = readExtras();
+  const installed = extras.items.find((item) => item.id === projectId);
+  return {
+    project: {
+      id: project.id,
+      slug: project.slug,
+      title: project.title,
+      description: project.description || "",
+      icon: project.icon_url,
+      type,
+    },
+    installedVersionId: installed?.versionId || null,
+    installedVersionNumber: installed?.versionNumber || null,
+    versions: (versions || [])
+      .filter((item) => item.files?.length)
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        versionNumber: item.version_number,
+        versionType: item.version_type,
+        date: item.date_published,
+        downloads: item.downloads || 0,
+        gameVersions: item.game_versions || [],
+        loaders: item.loaders || [],
+        compatible: isCompatibleVersion(item, type),
+        featured: Boolean(item.featured),
+      })),
+  };
+}
+
+function removeStoredFile(type, filename) {
+  if (!filename) return;
+  for (const where of ["vault", "game"]) {
+    const dest = extraPath(type, filename, where);
+    if (fs.existsSync(dest)) fs.rmSync(dest, { force: true });
+  }
+}
+
+function parseOptions(file) {
+  if (!fs.existsSync(file)) return [];
+  return fs.readFileSync(file, "utf8").split(/\r?\n/);
+}
+
+function writeOptions(file, lines) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const body = lines.join("\n").replace(/\n+$/, "");
+  fs.writeFileSync(file, body ? `${body}\n` : "");
+}
+
+function enableResourcePacks(filenames) {
+  const file = path.join(minecraftRoot(), "options.txt");
+  const lines = parseOptions(file);
+  const wanted = filenames.map((name) => `file/${name}`);
+  let list = ["vanilla", "fabric"];
+  const currentLine = lines.find((line) => line.startsWith("resourcePacks:"));
+  if (currentLine) {
+    try {
+      const parsed = JSON.parse(currentLine.slice("resourcePacks:".length));
+      if (Array.isArray(parsed) && parsed.length) list = parsed;
+    } catch {
+      // mantém o padrão
+    }
+  }
+  const keep = list.filter((id) => !String(id).startsWith("file/"));
+  const folder = extraFolder("resourcepack");
+  const onDisk = new Set(fs.existsSync(folder) ? fs.readdirSync(folder) : []);
+  const leftover = list.filter((id) => {
+    if (!String(id).startsWith("file/")) return false;
+    const name = String(id).slice("file/".length);
+    return onDisk.has(name) && !wanted.includes(id);
+  });
+  const next = [...keep, ...leftover, ...wanted.filter((id) => !keep.includes(id) && !leftover.includes(id))];
+  const encoded = `resourcePacks:${JSON.stringify(next)}`;
+  const index = lines.findIndex((line) => line.startsWith("resourcePacks:"));
+  if (index >= 0) lines[index] = encoded;
+  else lines.push(encoded);
+  if (!lines.some((line) => line.startsWith("incompatibleResourcePacks:"))) {
+    lines.push("incompatibleResourcePacks:[]");
+  }
+  writeOptions(file, lines);
+}
+
+function enableShader(filename) {
+  const bodies = [];
+  if (filename) {
+    bodies.push(`enableShaders=true`);
+    bodies.push(`disableUpdateMessage=false`);
+    bodies.push(`maxShadowRenderDistance=32`);
+    bodies.push(`shaderPack=${filename}`);
+  }
+  const files = [
+    path.join(minecraftRoot(), "iris.properties"),
+    path.join(minecraftRoot(), "config", "iris.properties"),
+  ];
+  for (const file of files) {
+    if (!filename && !fs.existsSync(file)) continue;
+    if (!filename) {
+      const lines = parseOptions(file).map((line) => {
+        if (line.startsWith("shaderPack=")) return "shaderPack=";
+        if (line.startsWith("enableShaders=")) return "enableShaders=false";
+        return line;
+      });
+      writeOptions(file, lines);
+      continue;
+    }
+    if (fs.existsSync(file)) {
+      const lines = parseOptions(file);
+      const set = {
+        enableShaders: false,
+        shaderPack: false,
+      };
+      const next = lines.map((line) => {
+        if (line.startsWith("enableShaders=")) {
+          set.enableShaders = true;
+          return "enableShaders=true";
+        }
+        if (line.startsWith("shaderPack=")) {
+          set.shaderPack = true;
+          return `shaderPack=${filename}`;
+        }
+        return line;
+      });
+      if (!set.enableShaders) next.push("enableShaders=true");
+      if (!set.shaderPack) next.push(`shaderPack=${filename}`);
+      writeOptions(file, next);
+    } else {
+      writeOptions(file, bodies);
+    }
+  }
+}
+
+function migrateExtrasToVault() {
+  const extras = readExtras();
+  for (const item of extras.items) {
+    const vault = extraPath(item.type, item.filename, "vault");
+    const game = extraPath(item.type, item.filename, "game");
+    if (!fs.existsSync(vault) && fs.existsSync(game)) copyIfNeeded(game, vault);
+  }
+}
+
+function applyExtras() {
+  ensurePackFolders();
+  migrateExtrasToVault();
+  const extras = readExtras();
+  for (const item of extras.items) {
+    const vault = extraPath(item.type, item.filename, "vault");
+    const game = extraPath(item.type, item.filename, "game");
+    if (fs.existsSync(vault)) copyIfNeeded(vault, game);
+  }
+  const packs = extras.items.filter((item) => item.type === "resourcepack").map((item) => item.filename);
+  enableResourcePacks(packs);
+  const shaders = extras.items
+    .filter((item) => item.type === "shader")
+    .sort((a, b) => String(b.installedAt || "").localeCompare(String(a.installedAt || "")));
+  enableShader(shaders[0]?.filename || "");
+  return extras.items.map(publicItem);
+}
+
+async function installFile(projectId, type, compat, versionId) {
   if (!FOLDERS[type]) throw new Error("Tipo de extra inválido.");
   const project = await fetchJson(`${MODRINTH}/project/${projectId}`);
-  const version = await pickVersion(projectId, type, compat);
+  let version = null;
+  if (versionId) {
+    version = await fetchJson(`${MODRINTH}/version/${versionId}`);
+    if (!isCompatibleVersion(version, type)) {
+      throw new Error("Essa versão não é Fabric 1.21.1. Escolha uma compatível para não quebrar o pack.");
+    }
+  } else {
+    version = await pickVersion(projectId, type, compat);
+  }
   if (!version) {
     throw new Error(`Nenhuma versão compatível com ${loaderLabel(compat.loader)} ${compat.mcVersion}.`);
   }
   const file = version.files.find((item) => item.primary) || version.files[0];
   if (!file?.url) throw new Error("Esse projeto não tem arquivo para baixar.");
 
-  const folder = extraFolder(type);
   const filename = safeFilename(file.filename);
-  const dest = path.join(folder, filename);
+  const dest = extraPath(type, filename, "vault");
+  const extras = readExtras();
+  const previous = extras.items.find((item) => item.id === projectId);
+  if (previous?.filename && previous.filename !== filename) {
+    removeStoredFile(previous.type, previous.filename);
+  }
   await downloadToFile(file.url, dest);
   if (!fs.existsSync(dest) || fs.statSync(dest).size < 32) {
     throw new Error(`O download de ${project.title} veio vazio.`);
   }
 
-  const extras = readExtras();
   extras.items = extras.items.filter((item) => item.id !== projectId);
   extras.items.push({
     id: project.id || projectId,
@@ -282,6 +532,7 @@ async function installFile(projectId, type, compat) {
     installedAt: new Date().toISOString(),
   });
   writeExtras(extras);
+  applyExtras();
   return publicItem(extras.items.at(-1));
 }
 
@@ -289,27 +540,43 @@ function shaderHelperName(loader) {
   return loader === "fabric" ? "Iris" : "Oculus";
 }
 
+function removeLooseIris(keepFilename = "") {
+  for (const folder of [extraFolder("mod"), extrasVault("mod")]) {
+    if (!fs.existsSync(folder)) continue;
+    for (const name of fs.readdirSync(folder)) {
+      if (!/^iris[-_]/i.test(name)) continue;
+      if (keepFilename && name === keepFilename) continue;
+      fs.rmSync(path.join(folder, name), { force: true });
+    }
+  }
+}
+
 async function ensureShaderMod(compat) {
-  const helperId = compat.loader === "fabric" ? IRIS_ID : OCULUS_SLUG;
+  const helperId = IRIS_ID;
   const packIds = await packProjectIds();
   if (packIds.has(helperId) || packIds.has(IRIS_ID)) return null;
   const extras = readExtras();
-  if (extras.items.some((item) => item.id === helperId || item.id === IRIS_ID || item.slug === helperId)) {
-    return null;
+  const existing = extras.items.find(
+    (item) => item.id === helperId || item.id === IRIS_ID || item.slug === "iris"
+  );
+  if (existing?.versionId === IRIS_VERSION_ID) {
+    const vault = extraPath("mod", existing.filename, "vault");
+    if (fs.existsSync(vault)) {
+      removeLooseIris(existing.filename);
+      return null;
+    }
   }
-  const pattern = compat.loader === "fabric" ? /^iris[-_]/i : /^(oculus|iris)[-_]/i;
-  const already = fs.readdirSync(extraFolder("mod")).some((name) => pattern.test(name));
-  if (already) return null;
-  return installFile(helperId, "mod", compat);
+  removeLooseIris();
+  return installFile(helperId, "mod", compat, IRIS_VERSION_ID);
 }
 
-async function installExtra(projectId, type) {
+async function installExtra(projectId, type, versionId) {
   if (!projectId) throw new Error("Projeto inválido.");
   const compat = { mcVersion: "1.21.1", loader: "fabric", packLoader: "fabric" };
   if (type === "shader") {
     await ensureShaderMod(compat);
   }
-  const installed = await installFile(projectId, type, compat);
+  const installed = await installFile(projectId, type, compat, versionId);
   return { installed, extras: readExtras().items.map(publicItem) };
 }
 
@@ -317,10 +584,10 @@ async function removeExtra(projectId) {
   const extras = readExtras();
   const item = extras.items.find((entry) => entry.id === projectId);
   if (!item) return { extras: extras.items.map(publicItem) };
-  const dest = path.join(extraFolder(item.type), item.filename);
-  if (fs.existsSync(dest)) fs.rmSync(dest, { force: true });
+  removeStoredFile(item.type, item.filename);
   extras.items = extras.items.filter((entry) => entry.id !== projectId);
   writeExtras(extras);
+  applyExtras();
   return { extras: extras.items.map(publicItem) };
 }
 
@@ -330,12 +597,15 @@ function listInstalledExtras() {
 
 module.exports = {
   searchExtras,
+  listExtraVersions,
   installExtra,
+  applyExtras,
   removeExtra,
   listInstalledExtras,
   packFolder,
   ensurePackFolders,
   packCompat,
   LOADERS,
+  CATEGORIES,
   shaderHelperName,
 };
