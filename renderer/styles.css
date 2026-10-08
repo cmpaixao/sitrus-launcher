@@ -239,10 +239,11 @@ button, input, .tab, .filter {
   line-height: 0.9;
   font-weight: 900;
   letter-spacing: 0.04em;
-  background: linear-gradient(90deg, #ff4d6d, #ffd56a, #9acd32, #5ad0ff);
+  background: linear-gradient(180deg, #ffd56a, #f7b944 52%, #e8891a);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
 }
 
 .wordmark-sub {
@@ -298,7 +299,7 @@ button, input, .tab, .filter {
 
 .launch-cta {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 16px;
 }
 
@@ -963,9 +964,10 @@ h1 {
 
 .play {
   width: auto;
-  padding: 0;
+  padding: 0 0 0 0.18em;
   font-size: 42px;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
+  line-height: 1;
   margin: 0;
   background: transparent;
   color: #fff;
@@ -975,19 +977,25 @@ h1 {
 
 .landing-bar .launch-block {
   margin: 0;
-  gap: 8px;
-  align-items: flex-end;
+  gap: 2px;
+  align-items: center;
+  text-align: center;
 }
 
 .landing-bar .progress {
   width: 220px;
   height: 4px;
-  margin: 0;
+  margin: 0 auto;
 }
 
 .landing-bar #status {
   min-height: 0;
-  color: rgba(255, 255, 255, 0.7);
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  line-height: 1.2;
 }
 
 .play:hover:not(:disabled) {
