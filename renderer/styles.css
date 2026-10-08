@@ -93,23 +93,28 @@ button, input, .tab, .filter {
 }
 
 .window {
+  position: relative;
   height: 100%;
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(900px 420px at 12% -10%, rgba(247, 185, 68, 0.22), transparent 55%),
-    radial-gradient(700px 380px at 90% 110%, rgba(154, 205, 50, 0.12), transparent 50%),
-    var(--bg);
+  background: #000;
 }
 
 .titlebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 0 10px 0 16px;
   -webkit-app-region: drag;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent);
 }
 
 .brand {
@@ -124,6 +129,10 @@ button, input, .tab, .filter {
   width: 22px;
   height: 22px;
   border-radius: 6px;
+}
+
+.titlebar .brand span {
+  display: none;
 }
 
 .window-actions {
@@ -156,27 +165,25 @@ button, input, .tab, .filter {
 .layout {
   flex: 1;
   min-height: 0;
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 24px;
-  padding: 28px;
+  position: relative;
+  display: block;
+  padding: 0;
   overflow: hidden;
 }
 
 .showcase {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  position: absolute;
+  inset: 0;
+  display: block;
   min-height: 0;
   overflow: hidden;
 }
 
 .slider {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  border: 1px solid var(--line);
-  border-radius: 24px;
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
   overflow: hidden;
   background: #1a140e;
 }
@@ -207,82 +214,112 @@ button, input, .tab, .filter {
   display: block;
 }
 
-.hero-copy {
+.wordmark {
   position: absolute;
+  z-index: 6;
+  left: 36px;
+  top: 72px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: none;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+}
+
+.wordmark img {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45));
+}
+
+.wordmark-title {
+  display: block;
+  font-size: 56px;
+  line-height: 0.9;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  background: linear-gradient(90deg, #ff4d6d, #ffd56a, #9acd32, #5ad0ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.wordmark-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: lowercase;
+  color: #fff;
+}
+
+.social-rail {
+  position: absolute;
+  z-index: 6;
+  top: 120px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.social-rail button {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+}
+
+.social-rail button:hover {
+  background: rgba(0, 0, 0, 0.55);
+  text-shadow: 0 0 16px #fff;
+}
+
+.landing-bar {
+  position: absolute;
+  z-index: 6;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 2;
-  padding: 28px 56px 36px 28px;
-  background: linear-gradient(180deg, transparent 0%, rgba(14, 12, 10, 0.82) 58%);
-  pointer-events: none;
-}
-
-.slider-dots {
-  position: absolute;
-  z-index: 3;
-  left: 28px;
-  bottom: 12px;
   display: flex;
-  gap: 8px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 88px 28px 36px;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.72) 70%);
 }
 
-.slider-dot {
-  width: 10px;
-  height: 10px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(246, 239, 228, 0.35);
-  cursor: pointer;
+.launch-cta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.slider-dot.is-active {
-  background: var(--accent);
-  width: 22px;
-}
-
-.slider-nav {
-  position: absolute;
-  top: 50%;
-  z-index: 3;
-  transform: translateY(-50%);
-  width: 36px;
-  height: 44px;
-  border: 0;
-  border-radius: 12px;
-  background: rgba(14, 12, 10, 0.45);
-  color: var(--text);
-  font-size: 28px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.slider-nav:hover {
-  background: rgba(14, 12, 10, 0.72);
-}
-
-.slider-nav.prev {
-  left: 10px;
-}
-
-.slider-nav.next {
-  right: 10px;
+.pack-chip {
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .account-chip {
   position: absolute;
-  z-index: 4;
-  top: 16px;
-  right: 16px;
+  z-index: 7;
+  top: 58px;
+  right: 72px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px 8px 8px;
-  border-radius: 999px;
-  background: rgba(14, 12, 10, 0.72);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(8px);
+  gap: 12px;
+  padding: 0;
+  background: transparent;
+  border: 0;
 }
 
 .account-chip[hidden] {
@@ -290,13 +327,35 @@ button, input, .tab, .filter {
 }
 
 .account-chip img {
-  width: 44px;
-  height: 44px;
+  width: 70px;
+  height: 70px;
   border-radius: 999px;
   object-fit: cover;
   background: #120f0c;
   image-rendering: pixelated;
-  box-shadow: 0 0 0 2px #cad7e1;
+  box-shadow: 0 0 0 3px #cad7e1, 0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+.chip-meta {
+  text-align: right;
+}
+
+.chip-meta strong {
+  color: #fff;
+  font-size: 18px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.chip-logout {
+  margin-top: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  opacity: 0;
+}
+
+.account-chip:hover .chip-logout,
+.chip-logout:focus {
+  opacity: 1;
 }
 
 .account-chip strong,
@@ -309,21 +368,11 @@ button, input, .tab, .filter {
   font-size: 11px;
 }
 
-.dock {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
 .server-status {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
-  flex: 1;
 }
 
 .server-dot {
@@ -351,8 +400,15 @@ button, input, .tab, .filter {
 }
 
 .server-status small {
-  color: var(--muted);
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.server-status strong {
+  font-size: 18px;
+  letter-spacing: 0.08em;
 }
 
 .eyebrow, .lede, .meta, h1 {
@@ -405,11 +461,39 @@ h1 {
 }
 
 .panel {
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 14px;
   min-height: 0;
   overflow: hidden;
+  position: absolute;
+  z-index: 12;
+  inset: 56px 24px 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(14, 12, 10, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.layout.is-sheet .panel {
+  display: flex;
+}
+
+.layout.is-home.needs-login .panel {
+  display: flex;
+  inset: auto 96px 120px auto;
+  width: 380px;
+  height: auto;
+  max-height: calc(100% - 180px);
+}
+
+.layout.is-sheet .wordmark,
+.layout.is-sheet .landing-bar,
+.layout.is-sheet .social-rail,
+.layout.is-sheet .account-chip {
+  opacity: 0.18;
+  pointer-events: none;
 }
 
 .launcher-update {
@@ -446,17 +530,17 @@ h1 {
   white-space: nowrap;
 }
 
-.layout.full-panel {
-  grid-template-columns: 1fr;
-}
-
-.layout.full-panel .showcase {
-  display: none;
-}
-
 #homeTab {
   overflow: hidden;
   scrollbar-width: none;
+}
+
+.chrome-tabs {
+  -webkit-app-region: no-drag;
+  width: min(420px, 46vw);
+  margin: 0 auto;
+  background: rgba(0, 0, 0, 0.32);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .panel::-webkit-scrollbar,
@@ -878,14 +962,32 @@ h1 {
 }
 
 .play {
-  padding: 18px 16px;
-  font-size: 22px;
-  letter-spacing: 0.28em;
+  width: auto;
+  padding: 0;
+  font-size: 42px;
+  letter-spacing: 0.22em;
   margin: 0;
   background: transparent;
   color: #fff;
-  text-shadow: 0 0 12px rgba(247, 185, 68, 0.35);
+  text-shadow: 0 0 18px rgba(255, 255, 255, 0.35);
   border: 1px solid transparent;
+}
+
+.landing-bar .launch-block {
+  margin: 0;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.landing-bar .progress {
+  width: 220px;
+  height: 4px;
+  margin: 0;
+}
+
+.landing-bar #status {
+  min-height: 0;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .play:hover:not(:disabled) {

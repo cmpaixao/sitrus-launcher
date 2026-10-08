@@ -111,6 +111,7 @@ function renderAccount() {
   ui.playBtn.setAttribute("aria-busy", state.busy ? "true" : "false");
   if (ui.logoutBtn) ui.logoutBtn.hidden = !account;
   if (ui.accountChip) ui.accountChip.hidden = !account;
+  ui.layout?.classList.toggle("needs-login", (state.lastTab || "home") === "home" && !account);
   if (!account) return;
   ui.playerName.textContent = account.name;
   ui.accountType.textContent = account.type === "microsoft" ? "Conta Microsoft" : "Offline";
@@ -212,6 +213,8 @@ function initSlider() {
   });
   slider.addEventListener("mouseenter", stop);
   slider.addEventListener("mouseleave", start);
+  document.querySelector(".showcase")?.addEventListener("mouseenter", stop);
+  document.querySelector(".showcase")?.addEventListener("mouseleave", start);
   slider.addEventListener("focusin", stop);
   slider.addEventListener("focusout", (event) => {
     if (!slider.contains(event.relatedTarget)) start();
@@ -256,10 +259,15 @@ function showTab(tab) {
     item.button.setAttribute("aria-selected", selected ? "true" : "false");
     item.button.tabIndex = selected ? 0 : -1;
   }
-  ui.layout.classList.toggle("full-panel", tab === "extras");
+  ui.layout.classList.toggle("is-home", tab === "home");
+  ui.layout.classList.toggle("is-sheet", tab !== "home");
+  ui.layout.classList.toggle("needs-login", tab === "home" && !state.account);
   persistSettings();
   if (tab === "extras") loadExtras();
 }
+
+document.getElementById("railExtrasBtn")?.addEventListener("click", () => showTab("extras"));
+document.getElementById("railConfigBtn")?.addEventListener("click", () => showTab("config"));
 
 ui.homeTabBtn.onclick = () => showTab("home");
 ui.extrasTabBtn.onclick = () => showTab("extras");
@@ -637,10 +645,10 @@ function renderServer(status) {
   const online = Boolean(status?.online);
   ui.serverDot?.classList.toggle("is-online", online);
   ui.serverDot?.classList.toggle("is-offline", !online && status);
-  ui.serverLabel.textContent = state.pack?.server?.name || "Sitrus Cobblemon";
+  ui.serverLabel.textContent = "Jogadores";
   ui.serverPlayers.textContent = online
-    ? `${status.players}/${status.max} jogadores online`
-    : "Servidor offline ou ocupado";
+    ? `JOGADORES  ${status.players}/${status.max}`
+    : "JOGADORES  —";
 }
 
 async function refreshServer() {
@@ -765,19 +773,19 @@ async function boot() {
   showTab(["home", "extras", "config"].includes(data.settings?.lastTab) ? data.settings.lastTab : "home");
   setInterval(refreshServer, 60000);
   const latest = data.status?.latest?.versionNumber;
-  const installed = data.status?.installed?.versionNumber;
-  ui.updateHint.textContent = data.status?.updateAvailable
-    ? `Atualização pendente (${installed || "não instalado"} → ${latest})`
-    : installed
-      ? "Instalado e atualizado"
-      : "Ainda não instalado neste PC";
+  if (ui.updateHint) {
+    const installed = data.status?.installed?.versionNumber;
+    ui.updateHint.textContent = data.status?.updateAvailable
+      ? `Atualização pendente (${installed || "não instalado"} → ${latest})`
+      : installed
+        ? "Instalado e atualizado"
+        : "Ainda não instalado neste PC";
+  }
   setStatus(state.account ? `Bem-vindo, ${state.account.name}.` : "Entre para instalar e jogar.");
   if (ui.launcherVersion) {
     ui.launcherVersion.textContent = data.launcherVersion || "dev";
   }
-  ui.packVersion.textContent = latest
-    ? `Pack ${latest} · Fabric 1.21.1`
-    : "Pack Sitrus · Fabric 1.21.1";
+  ui.packVersion.textContent = latest ? `• Sitrus Cobblemon ${latest}` : "• Sitrus Cobblemon";
 }
 
 boot().catch((error) => setStatus(error.message, 0, true));

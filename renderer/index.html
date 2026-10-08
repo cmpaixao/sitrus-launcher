@@ -13,6 +13,11 @@
           <img src="../assets/icon.png" alt="Sitrus" />
           <span>Sitrus Launcher</span>
         </div>
+        <nav class="tabs chrome-tabs" role="tablist" aria-label="Seções do launcher">
+          <button type="button" id="homeTabBtn" class="tab active" role="tab" aria-selected="true" aria-controls="homeTab" tabindex="0" data-tab="home">Jogar</button>
+          <button type="button" id="extrasTabBtn" class="tab" role="tab" aria-selected="false" aria-controls="extrasTab" tabindex="-1" data-tab="extras">Extras</button>
+          <button type="button" id="configTabBtn" class="tab" role="tab" aria-selected="false" aria-controls="configTab" tabindex="-1" data-tab="config">Config</button>
+        </nav>
         <div class="window-actions">
           <button type="button" id="minBtn" title="Minimizar" aria-label="Minimizar">—</button>
           <button type="button" id="maxBtn" title="Maximizar" aria-label="Maximizar">□</button>
@@ -20,7 +25,7 @@
         </div>
       </header>
 
-      <main class="layout" id="layout">
+      <main class="layout is-home" id="layout">
         <section class="showcase">
           <div class="slider" id="slider" aria-roledescription="carrossel" aria-label="Prints oficiais do Cobblemon">
             <div class="slides">
@@ -33,51 +38,50 @@
               <figure class="slide"><img src="../assets/slides/07.png" alt="Charizard no Cobblemon" /></figure>
               <figure class="slide"><img src="../assets/slides/08.png" alt="Alpha Steelix no Cobblemon" /></figure>
             </div>
-            <div class="account-chip" id="accountChip" hidden>
-              <img id="chipAvatar" alt="Avatar do jogador" referrerpolicy="no-referrer" />
-              <div>
-                <strong id="chipName">Jogador</strong>
-                <small id="chipType">conta</small>
-              </div>
-            </div>
-            <div class="hero-copy">
-              <p class="eyebrow">Cobblemon · Fabric 1.21.1</p>
-              <h1>Sitrus Cobblemon</h1>
-              <p class="lede">
-                Pack oficial do servidor. Java, Fabric e os mods entram sozinhos.
-                Você só escolhe a conta e clica em Jogar.
-              </p>
-              <div class="meta">
-                <span id="packVersion">Pack —</span>
-                <span id="updateHint"></span>
-              </div>
-            </div>
-            <div class="slider-dots" role="tablist" aria-label="Escolher print">
-              <button type="button" class="slider-dot is-active" role="tab" aria-selected="true" aria-label="Print 1"></button>
-              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 2"></button>
-              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 3"></button>
-              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 4"></button>
-              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 5"></button>
-              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 6"></button>
-              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 7"></button>
-              <button type="button" class="slider-dot" role="tab" aria-selected="false" aria-label="Print 8"></button>
-            </div>
-            <button type="button" class="slider-nav prev" aria-label="Print anterior">‹</button>
-            <button type="button" class="slider-nav next" aria-label="Próxima print">›</button>
           </div>
-          <div class="dock">
+
+          <div class="wordmark">
+            <img src="../assets/icon.png" alt="" />
+            <div>
+              <span class="wordmark-title">SITRUS</span>
+              <span class="wordmark-sub">cobblemon</span>
+            </div>
+          </div>
+
+          <div class="account-chip" id="accountChip" hidden>
+            <div class="chip-meta">
+              <strong id="chipName">Jogador</strong>
+              <button type="button" id="logoutBtn" class="ghost chip-logout">Trocar conta</button>
+            </div>
+            <img id="chipAvatar" alt="Avatar do jogador" referrerpolicy="no-referrer" />
+          </div>
+
+          <nav class="social-rail" aria-label="Atalhos">
+            <button type="button" id="railExtrasBtn" title="Extras">▣</button>
+            <button type="button" id="railConfigBtn" title="Configurações">⚙</button>
+            <button type="button" id="discordBtn" title="Discord">♫</button>
+            <button type="button" id="wikiBtn" title="Wiki">◉</button>
+            <button type="button" id="storeBtn" title="Loja">◈</button>
+            <button type="button" id="modrinthBtn" title="Página do pack">⬡</button>
+          </nav>
+
+          <div class="landing-bar">
             <div class="server-status" id="serverStatus" aria-live="polite">
               <span class="server-dot" id="serverDot"></span>
               <div>
-                <strong id="serverLabel">Sitrus Cobblemon</strong>
-                <small id="serverPlayers">Checando jogadores...</small>
+                <small id="serverLabel">Sitrus Cobblemon</small>
+                <strong id="serverPlayers">JOGADORES  —</strong>
               </div>
             </div>
-            <div class="links">
-              <button type="button" id="discordBtn" title="Abre o Discord no navegador">Discord</button>
-              <button type="button" id="wikiBtn" title="Abre a wiki no navegador">Wiki</button>
-              <button type="button" id="storeBtn" title="Abre a loja no navegador">Loja</button>
-              <button type="button" id="modrinthBtn" title="Abre o pack no Modrinth">Pack</button>
+            <div class="launch-cta">
+              <div class="launch-block">
+                <button type="button" id="playBtn" class="play" disabled title="Entre com uma conta para jogar">JOGAR</button>
+                <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="status" id="progress" hidden>
+                  <div id="bar"></div>
+                </div>
+                <p id="status" role="status" aria-live="polite">Pronto quando você estiver.</p>
+              </div>
+              <span class="pack-chip" id="packVersion">• Sitrus Cobblemon</span>
             </div>
           </div>
         </section>
@@ -87,43 +91,23 @@
             <p id="launcherUpdateText"></p>
             <button type="button" id="restartUpdateBtn" hidden>Reiniciar agora</button>
           </div>
-          <nav class="tabs" role="tablist" aria-label="Seções do launcher">
-            <button type="button" id="homeTabBtn" class="tab active" role="tab" aria-selected="true" aria-controls="homeTab" tabindex="0" data-tab="home">Jogar</button>
-            <button type="button" id="extrasTabBtn" class="tab" role="tab" aria-selected="false" aria-controls="extrasTab" tabindex="-1" data-tab="extras">Extras</button>
-            <button type="button" id="configTabBtn" class="tab" role="tab" aria-selected="false" aria-controls="configTab" tabindex="-1" data-tab="config">Config</button>
-          </nav>
 
           <div id="homeTab" class="tab-page" role="tabpanel" aria-labelledby="homeTabBtn">
-            <section class="card account">
-              <div id="loggedOut">
-                <h2>Conta</h2>
-                <p>Entre com Microsoft (original) ou jogue com nick offline.</p>
-                <button type="button" id="msBtn" class="primary">Entrar com Microsoft</button>
-                <div class="offline-row">
-                  <label class="sr-only" for="offlineNick">Nick offline</label>
-                  <input id="offlineNick" maxlength="16" placeholder="Nick offline" autocomplete="username" aria-describedby="nickHelp" />
-                  <button type="button" id="offlineBtn">Offline</button>
-                </div>
-                <p id="nickHelp" class="hint">3 a 16 caracteres: letras, números ou _</p>
+            <section class="card account login-card" id="loggedOut">
+              <h2>Conta</h2>
+              <p>Entre com Microsoft (original) ou jogue com nick offline.</p>
+              <button type="button" id="msBtn" class="primary">Entrar com Microsoft</button>
+              <div class="offline-row">
+                <label class="sr-only" for="offlineNick">Nick offline</label>
+                <input id="offlineNick" maxlength="16" placeholder="Nick offline" autocomplete="username" aria-describedby="nickHelp" />
+                <button type="button" id="offlineBtn">Offline</button>
               </div>
-              <div id="loggedIn" hidden>
-                <div class="who">
-                  <img id="avatar" alt="Avatar do jogador" referrerpolicy="no-referrer" />
-                  <div class="who-copy">
-                    <strong id="playerName">Jogador</strong>
-                    <small id="accountType">conta</small>
-                  </div>
-                  <button type="button" id="logoutBtn" class="ghost">Trocar conta</button>
-                </div>
-              </div>
+              <p id="nickHelp" class="hint">3 a 16 caracteres: letras, números ou _</p>
             </section>
-
-            <div class="launch-block">
-              <button type="button" id="playBtn" class="play" disabled title="Entre com uma conta para jogar">JOGAR</button>
-              <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="status" id="progress" hidden>
-                <div id="bar"></div>
-              </div>
-              <p id="status" role="status" aria-live="polite">Pronto quando você estiver.</p>
+            <div id="loggedIn" hidden>
+              <img id="avatar" alt="" hidden />
+              <strong id="playerName" hidden>Jogador</strong>
+              <small id="accountType" hidden>conta</small>
             </div>
           </div>
 

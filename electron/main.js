@@ -33,8 +33,8 @@ function send(channel, payload) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1180,
-    height: 720,
+    width: 1280,
+    height: 740,
     minWidth: 1100,
     minHeight: 680,
     frame: false,
