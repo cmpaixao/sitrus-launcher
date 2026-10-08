@@ -191,7 +191,19 @@ function facetsFor(type, { loader, mcVersion, category }) {
   return facets;
 }
 
-function isCompatibleVersion(version, type) {
+function isIrisProject(projectId) {
+  const id = String(projectId || "").toLowerCase();
+  return id === IRIS_ID.toLowerCase() || id === "iris";
+}
+
+function isPinnedIrisJar(name) {
+  return /^iris[-_].*1\.8\.8/i.test(String(name || "")) && !/beta/i.test(String(name || ""));
+}
+
+function isCompatibleVersion(version, type, projectId) {
+  if (isIrisProject(projectId) || isIrisProject(version.project_id)) {
+    return version.id === IRIS_VERSION_ID;
+  }
   const games = version.game_versions || [];
   const loaders = (version.loaders || []).map((item) => String(item).toLowerCase());
   if (type === "mod") return loaders.includes("fabric") && games.includes("1.21.1");
@@ -215,6 +227,9 @@ function hitNote(hit, type) {
 }
 
 async function pickVersion(projectId, type, { loader, mcVersion }) {
+  if (isIrisProject(projectId)) {
+    return fetchJson(`${MODRINTH}/version/${IRIS_VERSION_ID}`);
+  }
   const games = type === "resourcepack" && mcVersion.startsWith("1.21") ? [mcVersion, "1.21"] : [mcVersion];
   const loaders =
     type === "mod" ? [loader] : type === "shader" ? ["iris", "optifine"] : [];
@@ -355,7 +370,7 @@ async function listExtraVersions(projectId, type = "mod") {
         downloads: item.downloads || 0,
         gameVersions: item.game_versions || [],
         loaders: item.loaders || [],
-        compatible: isCompatibleVersion(item, type),
+        compatible: isCompatibleVersion(item, type, project.id),
         featured: Boolean(item.featured),
       })),
   };
@@ -471,10 +486,12 @@ function migrateExtrasToVault() {
   }
 }
 
-function applyExtras() {
+function syncExtrasToGame() {
   ensurePackFolders();
   migrateExtrasToVault();
   const extras = readExtras();
+  const iris = extras.items.find((item) => isIrisProject(item.id) || isIrisProject(item.slug));
+  removeLooseIris(iris?.versionId === IRIS_VERSION_ID ? iris.filename : "");
   for (const item of extras.items) {
     const vault = extraPath(item.type, item.filename, "vault");
     const game = extraPath(item.type, item.filename, "game");
@@ -489,13 +506,33 @@ function applyExtras() {
   return extras.items.map(publicItem);
 }
 
+async function applyExtras() {
+  const extras = readExtras();
+  const needsIris = extras.items.some(
+    (item) => item.type === "shader" || isIrisProject(item.id) || isIrisProject(item.slug)
+  );
+  const strayIris = [extraFolder("mod"), extrasVault("mod")].some(
+    (folder) =>
+      fs.existsSync(folder) &&
+      fs.readdirSync(folder).some((name) => /^iris[-_]/i.test(name) && !isPinnedIrisJar(name))
+  );
+  if (needsIris) {
+    await ensureShaderMod({ mcVersion: "1.21.1", loader: "fabric", packLoader: "fabric" });
+  } else if (strayIris) {
+    removeLooseIris();
+  }
+  return syncExtrasToGame();
+}
+
 async function installFile(projectId, type, compat, versionId) {
   if (!FOLDERS[type]) throw new Error("Tipo de extra inválido.");
   const project = await fetchJson(`${MODRINTH}/project/${projectId}`);
   let version = null;
-  if (versionId) {
+  if (isIrisProject(projectId) || isIrisProject(project.id) || isIrisProject(project.slug)) {
+    version = await fetchJson(`${MODRINTH}/version/${IRIS_VERSION_ID}`);
+  } else if (versionId) {
     version = await fetchJson(`${MODRINTH}/version/${versionId}`);
-    if (!isCompatibleVersion(version, type)) {
+    if (!isCompatibleVersion(version, type, project.id)) {
       throw new Error("Essa versão não é Fabric 1.21.1. Escolha uma compatível para não quebrar o pack.");
     }
   } else {
@@ -532,7 +569,7 @@ async function installFile(projectId, type, compat, versionId) {
     installedAt: new Date().toISOString(),
   });
   writeExtras(extras);
-  applyExtras();
+  syncExtrasToGame();
   return publicItem(extras.items.at(-1));
 }
 
@@ -545,7 +582,7 @@ function removeLooseIris(keepFilename = "") {
     if (!fs.existsSync(folder)) continue;
     for (const name of fs.readdirSync(folder)) {
       if (!/^iris[-_]/i.test(name)) continue;
-      if (keepFilename && name === keepFilename) continue;
+      if (keepFilename && (name === keepFilename || isPinnedIrisJar(name))) continue;
       fs.rmSync(path.join(folder, name), { force: true });
     }
   }
@@ -573,8 +610,11 @@ async function ensureShaderMod(compat) {
 async function installExtra(projectId, type, versionId) {
   if (!projectId) throw new Error("Projeto inválido.");
   const compat = { mcVersion: "1.21.1", loader: "fabric", packLoader: "fabric" };
-  if (type === "shader") {
-    await ensureShaderMod(compat);
+  if (type === "shader" || isIrisProject(projectId)) {
+    const iris = await ensureShaderMod(compat);
+    if (isIrisProject(projectId)) {
+      return { installed: iris || readExtras().items.find((item) => isIrisProject(item.id)), extras: readExtras().items.map(publicItem) };
+    }
   }
   const installed = await installFile(projectId, type, compat, versionId);
   return { installed, extras: readExtras().items.map(publicItem) };
@@ -587,7 +627,7 @@ async function removeExtra(projectId) {
   removeStoredFile(item.type, item.filename);
   extras.items = extras.items.filter((entry) => entry.id !== projectId);
   writeExtras(extras);
-  applyExtras();
+  syncExtrasToGame();
   return { extras: extras.items.map(publicItem) };
 }
 

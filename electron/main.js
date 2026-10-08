@@ -101,7 +101,7 @@ ipcMain.handle("game:play", async () => {
     });
 
     send("game:progress", { phase: "extras", message: "Reaplicando extras do jogador...", percent: 92 });
-    applyExtras();
+    await applyExtras();
 
     send("game:progress", { phase: "launch", message: "Abrindo o Minecraft...", percent: 96 });
     launchGame({
