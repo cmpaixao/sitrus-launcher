@@ -1,6 +1,6 @@
 {
   "name": "sitrus-launcher",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Launcher do pack Sitrus Cobblemon (Fabric 1.21.1)",
   "main": "electron/main.js",
   "author": "Sitrus",
