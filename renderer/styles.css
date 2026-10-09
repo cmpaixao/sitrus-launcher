@@ -302,25 +302,31 @@ button, input, .tab, .filter {
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 28px 88px 28px 36px;
+  gap: 16px;
+  padding: 28px 72px;
   background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.72) 70%);
+}
+
+.landing-bar .server-status {
+  justify-self: start;
 }
 
 .launch-cta {
   display: flex;
-  align-items: flex-end;
-  gap: 16px;
+  justify-self: center;
+  align-items: center;
 }
 
 .pack-chip {
+  justify-self: end;
   color: rgba(255, 255, 255, 0.82);
   font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
+  text-align: right;
 }
 
 .account-chip {
