@@ -269,6 +269,8 @@ button, input, .tab, .filter {
 .social-rail button {
   width: 38px;
   height: 38px;
+  display: grid;
+  place-items: center;
   border: 0;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.35);
@@ -278,9 +280,20 @@ button, input, .tab, .filter {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
 }
 
+.social-rail button svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.35));
+}
+
 .social-rail button:hover {
   background: rgba(0, 0, 0, 0.55);
   text-shadow: 0 0 16px #fff;
+}
+
+.social-rail button:hover svg {
+  filter: drop-shadow(0 0 10px #fff);
 }
 
 .landing-bar {
