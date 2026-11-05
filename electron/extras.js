@@ -46,7 +46,7 @@ function publicItem(item) {
 
 function extraFolder(type) {
   const name = FOLDERS[type];
-  if (!name) throw new Error("Tipo de extra inválido.");
+  if (!name) throw new Error("Esse tipo de extra não é aceito.");
   const folder = path.join(minecraftRoot(), name);
   fs.mkdirSync(folder, { recursive: true });
   return folder;
@@ -54,7 +54,7 @@ function extraFolder(type) {
 
 function extrasVault(type) {
   const name = FOLDERS[type];
-  if (!name) throw new Error("Tipo de extra inválido.");
+  if (!name) throw new Error("Esse tipo de extra não é aceito.");
   const folder = path.join(extrasRoot(), name);
   fs.mkdirSync(folder, { recursive: true });
   return folder;
@@ -343,7 +343,7 @@ async function searchExtras({ type = "mod", query = "", offset = 0, category = "
 }
 
 async function listExtraVersions(projectId, type = "mod") {
-  if (!projectId) throw new Error("Projeto inválido.");
+  if (!projectId) throw new Error("Não encontrei esse extra.");
   const project = await fetchJson(`${MODRINTH}/project/${projectId}`);
   const versions = await fetchJson(`${MODRINTH}/project/${projectId}/version`);
   const extras = readExtras();
@@ -525,7 +525,7 @@ async function applyExtras() {
 }
 
 async function installFile(projectId, type, compat, versionId) {
-  if (!FOLDERS[type]) throw new Error("Tipo de extra inválido.");
+  if (!FOLDERS[type]) throw new Error("Esse tipo de extra não é aceito.");
   const project = await fetchJson(`${MODRINTH}/project/${projectId}`);
   let version = null;
   if (isIrisProject(projectId) || isIrisProject(project.id) || isIrisProject(project.slug)) {
@@ -533,16 +533,16 @@ async function installFile(projectId, type, compat, versionId) {
   } else if (versionId) {
     version = await fetchJson(`${MODRINTH}/version/${versionId}`);
     if (!isCompatibleVersion(version, type, project.id)) {
-      throw new Error("Essa versão não é Fabric 1.21.1. Escolha uma compatível para não quebrar o pack.");
+      throw new Error("Essa versão não é Fabric 1.21.1. Escolha outra para não quebrar o modpack.");
     }
   } else {
     version = await pickVersion(projectId, type, compat);
   }
   if (!version) {
-    throw new Error(`Nenhuma versão compatível com ${loaderLabel(compat.loader)} ${compat.mcVersion}.`);
+    throw new Error(`Não há versão compatível com ${loaderLabel(compat.loader)} ${compat.mcVersion}.`);
   }
   const file = version.files.find((item) => item.primary) || version.files[0];
-  if (!file?.url) throw new Error("Esse projeto não tem arquivo para baixar.");
+  if (!file?.url) throw new Error("Esse extra não tem arquivo para baixar.");
 
   const filename = safeFilename(file.filename);
   const dest = extraPath(type, filename, "vault");
@@ -553,7 +553,7 @@ async function installFile(projectId, type, compat, versionId) {
   }
   await downloadToFile(file.url, dest);
   if (!fs.existsSync(dest) || fs.statSync(dest).size < 32) {
-    throw new Error(`O download de ${project.title} veio vazio.`);
+    throw new Error(`O download de ${project.title} veio vazio. Tente de novo.`);
   }
 
   extras.items = extras.items.filter((item) => item.id !== projectId);
@@ -608,7 +608,7 @@ async function ensureShaderMod(compat) {
 }
 
 async function installExtra(projectId, type, versionId) {
-  if (!projectId) throw new Error("Projeto inválido.");
+  if (!projectId) throw new Error("Não encontrei esse extra.");
   const compat = { mcVersion: "1.21.1", loader: "fabric", packLoader: "fabric" };
   if (type === "shader" || isIrisProject(projectId)) {
     const iris = await ensureShaderMod(compat);

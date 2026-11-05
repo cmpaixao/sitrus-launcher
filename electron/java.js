@@ -65,7 +65,7 @@ async function downloadJava(onProgress) {
 
   onProgress?.({ phase: "java", message: "Baixando Java 21...", percent: 5 });
   const res = await fetch(url, { headers: { "User-Agent": UA }, redirect: "follow" });
-  if (!res.ok) throw new Error(`Falha ao baixar Java 21 (${res.status})`);
+  if (!res.ok) throw new Error(`Não consegui baixar o Java 21 (erro ${res.status}). Confira sua internet e tente de novo.`);
   const total = Number(res.headers.get("content-length")) || 0;
   const file = fs.createWriteStream(zipPath);
   const reader = res.body.getReader();
@@ -103,7 +103,7 @@ async function downloadJava(onProgress) {
   fs.rmSync(zipPath, { force: true });
 
   const javaPath = path.join(target, "bin", "java.exe");
-  if (!fs.existsSync(javaPath)) throw new Error("Java 21 extraído, mas java.exe não foi encontrado.");
+  if (!fs.existsSync(javaPath)) throw new Error("O Java 21 foi baixado, mas não foi encontrado. Tente jogar de novo.");
   onProgress?.({ phase: "java", message: "Java 21 pronto.", percent: 100 });
   return javaPath;
 }
@@ -111,7 +111,7 @@ async function downloadJava(onProgress) {
 async function ensureJava(preferred, onProgress) {
   const existing = await findJava21(preferred);
   if (existing) return existing;
-  onProgress?.({ phase: "java", message: "Java 21 não encontrado. Vou baixar um runtime...", percent: 0 });
+  onProgress?.({ phase: "java", message: "Java 21 não encontrado. Vou baixar agora...", percent: 0 });
   return downloadJava(onProgress);
 }
 

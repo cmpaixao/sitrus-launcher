@@ -46,7 +46,7 @@ function setupAutoUpdate(send) {
   autoUpdater.on("error", (error) => {
     send("app:update", {
       status: "error",
-      message: error?.message || "Falha ao atualizar o launcher.",
+      message: error?.message || "Não deu para atualizar o launcher. Tente de novo ao reabrir.",
     });
   });
 
@@ -54,7 +54,7 @@ function setupAutoUpdate(send) {
     autoUpdater.checkForUpdates().catch((error) => {
       send("app:update", {
         status: "error",
-        message: error?.message || "Falha ao atualizar o launcher.",
+        message: error?.message || "Não deu para atualizar o launcher. Tente de novo ao reabrir.",
       });
     });
   };

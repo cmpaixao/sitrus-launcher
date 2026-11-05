@@ -95,7 +95,7 @@ ipcMain.handle("game:play", async () => {
     send("game:progress", { phase: "java", message: "Preparando Java 21...", percent: 3 });
     const javaPath = await ensureJava(settings.javaPath, (progress) => send("game:progress", progress));
 
-    send("game:progress", { phase: "pack", message: "Buscando atualização do pack...", percent: 10 });
+    send("game:progress", { phase: "pack", message: "Procurando atualização do modpack...", percent: 10 });
     await ensurePack(pack.modrinthSlug, (progress) => send("game:progress", progress), {
       checkUpdates: true,
     });
@@ -150,7 +150,7 @@ ipcMain.handle("extras:remove", async (_e, id) => removeExtra(id));
 ipcMain.handle("app:openFolder", async (_e, kind) => {
   const target = packFolder(kind || "root");
   const err = await shell.openPath(target);
-  if (err) throw new Error(`Não deu para abrir a pasta: ${err}`);
+  if (err) throw new Error("Não deu para abrir a pasta. Tente de novo.");
   return target;
 });
 ipcMain.handle("logs:share", async () => shareLatestLog());

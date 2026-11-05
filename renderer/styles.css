@@ -286,13 +286,30 @@ button, input, .tab, .filter {
   align-items: center;
 }
 
-.pack-chip {
+.pack-meta {
   justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pack-chip {
   color: rgba(255, 255, 255, 0.82);
   font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
   text-align: right;
+}
+
+.launcher-foot {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .account-chip {
@@ -1155,12 +1172,25 @@ input[type="range"] {
   color: #ffb4a8;
 }
 
-.help-list {
-  margin: 0;
-  padding-left: 18px;
+.help-block {
+  margin-top: 16px;
+}
+
+.help-block h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.help-block p {
+  margin: 0 0 10px;
   color: var(--muted);
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.help-bye {
+  margin: 18px 0 0;
+  font-weight: 700;
 }
 
 kbd {

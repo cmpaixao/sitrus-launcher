@@ -13,13 +13,13 @@ function emit(onProgress, payload) {
 
 async function fetchJson(url) {
   const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "application/json" } });
-  if (!res.ok) throw new Error(`Falha na API (${res.status}): ${url}`);
+  if (!res.ok) throw new Error(`Não consegui acessar o download (erro ${res.status}). Confira sua internet e tente de novo.`);
   return res.json();
 }
 
 async function downloadToFile(url, dest, onBytes) {
   const res = await fetch(url, { headers: { "User-Agent": UA }, redirect: "follow" });
-  if (!res.ok) throw new Error(`Download falhou (${res.status}): ${url}`);
+  if (!res.ok) throw new Error(`O download falhou (erro ${res.status}). Confira sua internet e tente de novo.`);
   await fs.promises.mkdir(path.dirname(dest), { recursive: true });
   const total = Number(res.headers.get("content-length")) || 0;
   const file = fs.createWriteStream(dest);
@@ -76,7 +76,7 @@ async function latestPack(slug) {
   const project = await fetchJson(`${MODRINTH}/project/${slug}`);
   const versions = await fetchJson(`${MODRINTH}/project/${slug}/version`);
   const version = versions.find((item) => item.version_type === "release") || versions[0];
-  if (!version) throw new Error("Nenhuma versão do pack encontrada no Modrinth.");
+  if (!version) throw new Error("Não encontrei uma versão do modpack no Modrinth. Tente de novo daqui a pouco.");
   const file = version.files.find((item) => item.primary) || version.files[0];
   return { project, version, file };
 }
@@ -96,7 +96,7 @@ async function installFabric(root, mcVersion, loaderVersion) {
 async function latestFabricLoader(mcVersion) {
   const loaders = await fetchJson(`https://meta.fabricmc.net/v2/versions/loader/${mcVersion}`);
   const stable = loaders.find((item) => item.loader?.stable) || loaders[0];
-  if (!stable) throw new Error("Não achei Fabric Loader para 1.21.1.");
+  if (!stable) throw new Error("Não encontrei o Fabric para Minecraft 1.21.1. Confira sua internet e tente de novo.");
   return stable.loader.version;
 }
 
@@ -132,17 +132,17 @@ async function ensurePack(slug, onProgress, options = {}) {
   if (packReady && !checkUpdates) {
     emit(onProgress, {
       phase: "pack",
-      message: `Pack ${installed.versionNumber} pronto.`,
+      message: `Modpack ${installed.versionNumber} pronto.`,
       percent: 100,
     });
     return installed;
   }
 
-  emit(onProgress, { phase: "pack", message: "Checando pack no Modrinth...", percent: 2 });
+  emit(onProgress, { phase: "pack", message: "Procurando atualização do modpack...", percent: 2 });
 
   const { version, file } = await latestPack(slug);
   if (installed?.versionId === version.id && fs.existsSync(path.join(root, "mods"))) {
-    emit(onProgress, { phase: "pack", message: `Pack ${version.version_number} já instalado.`, percent: 100 });
+    emit(onProgress, { phase: "pack", message: `Modpack ${version.version_number} já está instalado.`, percent: 100 });
     return installed;
   }
 
@@ -156,12 +156,12 @@ async function ensurePack(slug, onProgress, options = {}) {
     if (!total) return;
     emit(onProgress, {
       phase: "pack",
-      message: "Baixando arquivo do pack...",
+      message: "Baixando o modpack...",
       percent: 8 + Math.round((received / total) * 10),
     });
   });
 
-  emit(onProgress, { phase: "pack", message: "Extraindo pack...", percent: 20 });
+  emit(onProgress, { phase: "pack", message: "Extraindo o modpack...", percent: 20 });
   await extractZip(mrpackPath, { dir: work });
   const index = JSON.parse(fs.readFileSync(path.join(work, "modrinth.index.json"), "utf8"));
   const mcVersion = index.dependencies?.minecraft || "1.21.1";
@@ -193,7 +193,7 @@ async function ensurePack(slug, onProgress, options = {}) {
       done += 1;
       emit(onProgress, {
         phase: "mods",
-        message: `Mods ${done}/${clientFiles.length}`,
+        message: `Conferindo arquivos ${done}/${clientFiles.length}`,
         current: done,
         total: clientFiles.length,
         percent: 28 + Math.round((done / clientFiles.length) * 55),
@@ -201,10 +201,10 @@ async function ensurePack(slug, onProgress, options = {}) {
       return;
     }
     const url = item.downloads?.[0];
-    if (!url) throw new Error(`Arquivo sem download: ${item.path}`);
+    if (!url) throw new Error("Um arquivo do modpack não tem link de download. Tente de novo.");
     await downloadToFile(url, dest);
     if (expected && (await sha512File(dest)) !== expected) {
-      throw new Error(`Hash inválido: ${item.path}`);
+      throw new Error("Um arquivo do modpack veio incompleto. Tente jogar de novo.");
     }
     done += 1;
     emit(onProgress, {
@@ -226,7 +226,7 @@ async function ensurePack(slug, onProgress, options = {}) {
     }
   }
 
-  emit(onProgress, { phase: "overrides", message: "Aplicando configs do pack...", percent: 90 });
+  emit(onProgress, { phase: "overrides", message: "Aplicando as configurações do modpack...", percent: 90 });
   copyDir(path.join(work, "overrides"), root);
   copyDir(path.join(work, "client-overrides"), root);
   fs.rmSync(work, { recursive: true, force: true });
@@ -244,7 +244,7 @@ async function ensurePack(slug, onProgress, options = {}) {
     installedAt: new Date().toISOString(),
   };
   writeInstance(instance);
-  emit(onProgress, { phase: "done", message: "Pack instalado.", percent: 100 });
+  emit(onProgress, { phase: "done", message: "Modpack instalado.", percent: 100 });
   return instance;
 }
 

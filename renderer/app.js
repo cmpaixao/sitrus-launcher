@@ -39,6 +39,7 @@ const ui = {
   launcherUpdateText: document.getElementById("launcherUpdateText"),
   restartUpdateBtn: document.getElementById("restartUpdateBtn"),
   launcherVersion: document.getElementById("launcherVersion"),
+  launcherVersionHome: document.getElementById("launcherVersionHome"),
   openPackFolderBtn: document.getElementById("openPackFolderBtn"),
   openExtrasFolderBtn: document.getElementById("openExtrasFolderBtn"),
   openPackFolderConfigBtn: document.getElementById("openPackFolderConfigBtn"),
@@ -300,6 +301,9 @@ ui.storeBtn.onclick = () => {
 ui.modrinthBtn.onclick = () => {
   window.sitrus.openExternal("https://modrinth.com/modpack/sitrus-cobblemon");
 };
+document.getElementById("helpTicketBtn")?.addEventListener("click", () => {
+  window.sitrus.openExternal("https://discord.com/channels/1364321967947382835/1371322509713997906");
+});
 
 ui.msBtn.onclick = async () => {
   try {
@@ -308,7 +312,7 @@ ui.msBtn.onclick = async () => {
     renderAccount();
     setStatus(`Logado como ${state.account.name}.`);
   } catch (error) {
-    setStatus(error.message || "Falha no login Microsoft.", 0, true);
+    setStatus(error.message || "Não consegui entrar com a Microsoft. Tente de novo.", 0, true);
   }
 };
 
@@ -344,7 +348,7 @@ window.addEventListener("keydown", (event) => {
 ui.logoutBtn.onclick = async () => {
   state.account = await window.sitrus.logout();
   renderAccount();
-  setStatus("Conta desconectada. Entre de novo na aba Jogar.");
+  setStatus("Conta desconectada. Entre de novo em Jogar.");
   showTab("home");
 };
 
@@ -358,19 +362,19 @@ ui.playBtn.onclick = async () => {
   if (!result.ok) {
     state.busy = false;
     renderAccount();
-    setStatus(result.message || "Não deu pra abrir o jogo.", 0, true);
+    setStatus(result.message || "Não deu para abrir o jogo. Confira sua internet e tente de novo.", 0, true);
   }
 };
 
 function extrasHint(total) {
   const count = typeof total === "number" ? ` ${total} resultados.` : "";
   if (state.extrasType === "mod") {
-    return `Mods Fabric 1.21.1. Abra Versões para ver todas as builds do Modrinth.${count}`;
+    return `Mods de Fabric 1.21.1. Abra Versões para ver as builds do Modrinth.${count}`;
   }
   if (state.extrasType === "resourcepack") {
-    return `Texturas para Minecraft 1.21.1. Ative no jogo em Opções > Resource Packs.${count}`;
+    return `Texturas para Minecraft 1.21.1. No jogo, ative em Opções > Pacotes de recursos.${count}`;
   }
-  return `Shaders compatíveis com Iris. Ative no menu do shader no jogo.${count}`;
+  return `Shaders para o Iris. No jogo, ative no menu de shaders.${count}`;
 }
 
 function formatCount(value) {
@@ -385,7 +389,7 @@ function extraTags(item) {
   const cats = (item.categories || []).filter((cat) => !skip.has(String(cat).toLowerCase())).slice(0, 3);
   const tags = [];
   if (item.installed) tags.push({ text: "Instalado", kind: "installed" });
-  if (item.downloads) tags.push({ text: `${formatCount(item.downloads)} downloads` });
+  if (item.downloads) tags.push({ text: `${formatCount(item.downloads)} baixados` });
   for (const cat of cats) tags.push({ text: cat });
   return tags
     .map((tag) => `<span class="extra-tag${tag.kind ? ` ${tag.kind}` : ""}">${escapeHtml(tag.text)}</span>`)
@@ -398,7 +402,7 @@ function renderExtras(hits, { append = false, hasMore = false } = {}) {
     ? `<button type="button" class="ghost extra-more" data-action="more">Carregar mais</button>`
     : "";
   if (!hits.length && !append) {
-    ui.extrasList.innerHTML = `<div class="extra-empty">Nada encontrado nesse filtro. Tente outra busca.</div>${more}`;
+    ui.extrasList.innerHTML = `<div class="extra-empty">Nada encontrado. Tente outra busca.</div>${more}`;
     return;
   }
   const cards = hits
@@ -462,10 +466,10 @@ async function loadExtras({ append = false } = {}) {
     renderExtras(append ? hits : state.extrasHits, { append, hasMore: state.extrasHasMore });
   } catch (error) {
     if (append) {
-      ui.extrasHint.textContent = error.message || "Falha ao buscar extras.";
+      ui.extrasHint.textContent = error.message || "Não consegui buscar os extras. Confira sua internet e tente de novo.";
       return;
     }
-    ui.extrasList.innerHTML = `<div class="extra-empty">${escapeHtml(error.message || "Falha ao buscar extras.")}<br /><button type="button" class="ghost" data-action="retry" style="margin-top:10px">Tentar de novo</button></div>`;
+    ui.extrasList.innerHTML = `<div class="extra-empty">${escapeHtml(error.message || "Não consegui buscar os extras. Confira sua internet e tente de novo.")}<br /><button type="button" class="ghost" data-action="retry" style="margin-top:10px">Tentar de novo</button></div>`;
   }
 }
 
@@ -538,7 +542,7 @@ function renderVersionList(projectId) {
       return `<div class="extra-version${cls}">
         <div>
           <strong>${escapeHtml(item.versionNumber || item.name)} <span class="ver-type ${type}">${type}</span></strong>
-          <small>${games}${loaders ? ` · ${loaders}` : ""} · ${formatCount(item.downloads)} downloads · ${formatDate(item.date)}${installed}</small>
+          <small>${games}${loaders ? ` · ${loaders}` : ""} · ${formatCount(item.downloads)} baixados · ${formatDate(item.date)}${installed}</small>
         </div>
         ${action}
       </div>`;
@@ -561,7 +565,7 @@ async function toggleVersions(id, type) {
     renderExtras(state.extrasHits, { hasMore: state.extrasHasMore });
   } catch (error) {
     state.extrasVersions[id] = { project: { id, type }, versions: [] };
-    ui.extrasHint.textContent = error.message || "Não deu para listar as versões.";
+    ui.extrasHint.textContent = error.message || "Não deu para listar as versões. Tente de novo.";
     renderExtras(state.extrasHits, { hasMore: state.extrasHasMore });
   }
 }
@@ -595,14 +599,14 @@ ui.extrasList.addEventListener("click", async (event) => {
     return;
   }
   if (action === "remove") {
-    const ok = window.confirm("Remover este extra do launcher? Você pode instalar de novo depois.");
+    const ok = window.confirm("Remover este extra? Você pode instalar de novo depois.");
     if (!ok) return;
   }
   button.disabled = true;
   try {
     if (action === "install") {
       button.textContent = "Baixando...";
-      ui.extrasHint.textContent = "Baixando e instalando na pasta do pack...";
+      ui.extrasHint.textContent = "Baixando e instalando o extra...";
       await window.sitrus.installExtra({
         id,
         type: button.dataset.type || state.extrasType,
@@ -618,7 +622,7 @@ ui.extrasList.addEventListener("click", async (event) => {
   } catch (error) {
     button.disabled = false;
     button.textContent = action === "install" ? "Instalar" : "Remover";
-    ui.extrasHint.textContent = error.message || "Não deu para concluir.";
+    ui.extrasHint.textContent = error.message || "Não deu para concluir. Tente de novo.";
   }
 });
 
@@ -645,10 +649,10 @@ function renderServer(status) {
   const online = Boolean(status?.online);
   ui.serverDot?.classList.toggle("is-online", online);
   ui.serverDot?.classList.toggle("is-offline", !online && status);
-  ui.serverLabel.textContent = "Jogadores";
+  ui.serverLabel.textContent = "Sitrus Cobblemon";
   ui.serverPlayers.textContent = online
-    ? `JOGADORES  ${status.players}/${status.max}`
-    : "JOGADORES  —";
+    ? `Online · ${status.players}/${status.max}`
+    : "Offline";
 }
 
 async function refreshServer() {
@@ -671,7 +675,7 @@ async function shareGameLog() {
     button.disabled = true;
     button.textContent = "Enviando log...";
   });
-  if (hint) hint.textContent = "Lendo o último log e enviando para o mclo.gs...";
+  if (hint) hint.textContent = "Lendo o último registro do jogo...";
   if (result) {
     result.hidden = true;
     result.innerHTML = "";
@@ -684,11 +688,11 @@ async function shareGameLog() {
       ? `<p>Problemas detectados:</p><ul>${problems
           .map((item) => `<li>${escapeHtml(item.message)}${item.solutions?.[0] ? ` — ${escapeHtml(item.solutions[0])}` : ""}</li>`)
           .join("")}</ul>`
-      : "<p>O mclo.gs não apontou um crash específico neste log.</p>";
+      : "<p>Não encontramos um erro claro neste registro.</p>";
     const infoHtml = info.length
       ? `<ul>${info.map((item) => `<li>${escapeHtml(item.message || `${item.label}: ${item.value}`)}</li>`).join("")}</ul>`
       : "";
-    const message = `Log enviado (${data.file}, ${data.lines} linhas, ${data.errors} erros). Link copiado.`;
+    const message = `Registro enviado (${data.lines} linhas). O link foi copiado.`;
     if (hint) hint.textContent = message;
     setStatus(message, 0);
     if (result) {
@@ -697,13 +701,13 @@ async function shareGameLog() {
     }
     if (data.url) window.sitrus.openExternal(data.url);
   } catch (error) {
-    const text = error.message || "Não deu para enviar o log.";
+    const text = error.message || "Não deu para enviar o registro. Confira sua internet e tente de novo.";
     if (hint) hint.textContent = text;
     setStatus(text, 0, true);
   } finally {
     buttons.forEach((button) => {
       button.disabled = false;
-      button.textContent = "Enviar log (mclo.gs)";
+      button.textContent = "Enviar log";
     });
   }
 }
@@ -726,7 +730,7 @@ window.sitrus.onClosed((data) => {
   renderAccount();
   const code = Number(data?.code) || 0;
   if (code !== 0) {
-    setStatus(`O jogo fechou (código ${code}). Envie o log na aba Config se precisar de ajuda.`, 0, true);
+    setStatus(`O jogo fechou (código ${code}). Se precisar de ajuda, envie o registro em Configurações > Suporte.`, 0, true);
   } else {
     setStatus("Jogo fechado. Pode jogar de novo quando quiser.", 0);
   }
@@ -781,10 +785,10 @@ async function boot() {
         ? "Instalado e atualizado"
         : "Ainda não instalado neste PC";
   }
-  setStatus(state.account ? `Bem-vindo, ${state.account.name}.` : "Entre para instalar e jogar.");
-  if (ui.launcherVersion) {
-    ui.launcherVersion.textContent = data.launcherVersion || "dev";
-  }
+  setStatus(state.account ? `Bem-vindo, ${state.account.name}.` : "Entre com uma conta para jogar.");
+  const versionLabel = data.launcherVersion ? `v${data.launcherVersion}` : "dev";
+  if (ui.launcherVersion) ui.launcherVersion.textContent = versionLabel;
+  if (ui.launcherVersionHome) ui.launcherVersionHome.textContent = `Sitrus Launcher ${versionLabel}`;
   ui.packVersion.textContent = latest ? `• Sitrus Cobblemon ${latest}` : "• Sitrus Cobblemon";
 }
 

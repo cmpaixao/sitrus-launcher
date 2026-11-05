@@ -69,7 +69,7 @@ async function fetchJson(url, options = {}) {
   });
   const data = await res.json().catch(() => null);
   if (!res.ok || data?.success === false) {
-    throw new Error(data?.error || `Falha no mclo.gs (${res.status})`);
+    throw new Error(data?.error || `Não deu para enviar o registro (erro ${res.status}). Tente de novo daqui a pouco.`);
   }
   return data;
 }
@@ -103,11 +103,11 @@ function publicInsights(insights) {
 async function shareLatestLog() {
   const file = findLogFile();
   if (!file) {
-    throw new Error("Ainda não tem log. Jogue uma vez e tente de novo.");
+    throw new Error("Ainda não há registro do jogo. Jogue uma vez e tente de novo.");
   }
   const raw = await fs.promises.readFile(file, "utf8");
   const content = truncateLog(raw);
-  if (!content) throw new Error("O arquivo de log está vazio.");
+  if (!content) throw new Error("O registro do jogo está vazio. Jogue uma vez e tente de novo.");
 
   const instance = readInstance();
   const created = await fetchJson(`${API}/log`, {

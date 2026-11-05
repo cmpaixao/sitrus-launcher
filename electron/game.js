@@ -5,7 +5,7 @@ const { readInstance } = require("./installer");
 
 function launchGame({ account, javaPath, ramGb, server, onProgress, onLog, onClose }) {
   const instance = readInstance();
-  if (!instance) throw new Error("O pack ainda não foi instalado.");
+  if (!instance) throw new Error("O modpack ainda não foi instalado. Clique em Jogar para baixar.");
 
   const launcher = new Client();
   const host = String(server?.address || "").trim();

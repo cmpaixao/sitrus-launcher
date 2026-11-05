@@ -72,7 +72,7 @@
               <span class="server-dot" id="serverDot"></span>
               <div>
                 <small id="serverLabel">Sitrus Cobblemon</small>
-                <strong id="serverPlayers">JOGADORES  —</strong>
+                <strong id="serverPlayers">Verificando servidor...</strong>
               </div>
             </div>
             <div class="launch-cta">
@@ -81,10 +81,13 @@
                 <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="status" id="progress" hidden>
                   <div id="bar"></div>
                 </div>
-                <p id="status" role="status" aria-live="polite">Pronto quando você estiver.</p>
+                <p id="status" role="status" aria-live="polite">Entre com uma conta para jogar.</p>
               </div>
             </div>
-            <span class="pack-chip" id="packVersion">• Sitrus Cobblemon</span>
+            <div class="pack-meta">
+              <span class="pack-chip" id="packVersion">• Sitrus Cobblemon</span>
+              <span class="launcher-foot" id="launcherVersionHome">Sitrus Launcher</span>
+            </div>
           </div>
         </section>
 
@@ -92,7 +95,7 @@
           <div id="homeTab" class="tab-page" role="tabpanel" aria-labelledby="homeTabBtn">
             <section class="card account login-card" id="loggedOut">
               <h2>Conta</h2>
-              <p>Entre com Microsoft (original) ou jogue com nick offline.</p>
+              <p>Entre com a conta Microsoft ou jogue com um nick offline.</p>
               <button type="button" id="msBtn" class="primary">Entrar com Microsoft</button>
               <div class="offline-row">
                 <label class="sr-only" for="offlineNick">Nick offline</label>
@@ -113,7 +116,7 @@
               <div class="extras-head">
                 <div>
                   <h2>Extras</h2>
-                  <p>Catálogo no estilo Modrinth, só <strong>Fabric 1.21.1</strong>. Extras ficam salvos fora do pack: atualizar o Sitrus não apaga o que você baixou. Texturas e shaders ligam sozinhos no jogo.</p>
+                  <p>Mods, texturas e shaders só para <strong>Fabric 1.21.1</strong>. O que você instalar aqui fica salvo: atualizar o Sitrus Cobblemon não apaga. Texturas e shaders ligam sozinhos no jogo.</p>
                 </div>
                 <span class="compat-chip">Fabric 1.21.1</span>
               </div>
@@ -154,13 +157,13 @@
               <div class="settings-pages scroll">
                 <section class="card settings-page" data-settings-page="minecraft">
                   <h2>Minecraft</h2>
-                  <p>Ajuste memória, conexão e comportamento do launcher.</p>
+                  <p>Ajuste a memória, o servidor e o que o launcher faz ao abrir o jogo.</p>
                   <label class="ram" for="ram">
                     <span>Memória RAM</span>
                     <strong><span id="ramValue">4</span> GB</strong>
                   </label>
                   <input id="ram" type="range" min="2" max="12" step="1" value="4" aria-valuemin="2" aria-valuemax="12" />
-                  <p class="hint">4 GB serve na maioria dos PCs. Suba se o jogo fechar por falta de memória.</p>
+                  <p class="hint">4 GB funciona na maioria dos computadores. Aumente se o jogo fechar por falta de memória.</p>
                   <label class="check" for="closeOnPlay">
                     <input id="closeOnPlay" type="checkbox" />
                     Esconder o launcher ao abrir o jogo
@@ -169,26 +172,37 @@
                     IP do servidor
                     <input id="serverAddress" placeholder="sitruscobblemon.com" spellcheck="false" />
                   </label>
-                  <p class="hint">Launcher <span id="launcherVersion">—</span>. Quem instalou pelo Setup atualiza sozinho quando sair versão nova.</p>
+                  <p class="hint">Sitrus Launcher <span id="launcherVersion">—</span>. Quem instalou pelo Setup atualiza sozinho quando sai uma versão nova.</p>
                   <button type="button" id="openPackFolderConfigBtn" class="ghost">Abrir pasta do pack</button>
                 </section>
                 <section class="card settings-page" data-settings-page="support" hidden>
                   <h2>Suporte</h2>
-                  <p>Envia o último log do jogo para o mclo.gs. O link é copiado e você pode colar no Discord.</p>
-                  <button type="button" id="shareLogBtn" class="ghost">Enviar log (mclo.gs)</button>
+                  <p>Envia o último registro do jogo. O link é copiado para você colar no Discord.</p>
+                  <button type="button" id="shareLogBtn" class="ghost">Enviar log</button>
                   <p id="shareLogHint" class="hint" role="status"></p>
                   <div id="shareLogResult" class="log-result" hidden></div>
                 </section>
                 <section class="card settings-page" data-settings-page="help" hidden>
-                  <h2>Ajuda rápida</h2>
-                  <ul class="help-list">
-                    <li>Teclas <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> trocam Jogar, Extras e Config.</li>
-                    <li>Jogar busca atualização do pack automaticamente. Trocar conta fica no perfil.</li>
-                    <li>Em Extras, filtre por tipo e categoria. Abra Versões para ver todas as builds do Modrinth.</li>
-                    <li>Só instala extra Fabric 1.21.1, para não quebrar o pack Sitrus.</li>
-                    <li>Wiki, loja e Discord abrem no navegador.</li>
-                    <li>Se o jogo fechar errado, envie o log nesta aba (mclo.gs) e compartilhe o link.</li>
-                  </ul>
+                  <h2>Central de Ajuda</h2>
+                  <p>Está enfrentando algum problema com o launcher? Não se preocupe! Nesta seção você encontrará algumas orientações para solucionar os problemas mais comuns durante a instalação, atualização ou inicialização do jogo.</p>
+                  <div class="help-block">
+                    <h3>Problemas ao iniciar o jogo?</h3>
+                    <p>Verifique se o seu computador atende aos requisitos mínimos e se possui a versão correta do Java instalada.</p>
+                  </div>
+                  <div class="help-block">
+                    <h3>O download ou a atualização não funciona?</h3>
+                    <p>Verifique sua conexão com a internet e tente abrir o launcher novamente.</p>
+                  </div>
+                  <div class="help-block">
+                    <h3>O jogo apresentou algum erro ou fechou sozinho?</h3>
+                    <p>Tente reiniciar o launcher e iniciar o jogo novamente. Caso o problema continue, entre em contato com nossa equipe de suporte.</p>
+                  </div>
+                  <div class="help-block">
+                    <h3>Ainda precisa de ajuda?</h3>
+                    <p>Nossa equipe está disponível para auxiliar você! Entre em nosso Discord e abra um ticket de suporte para que possamos analisar seu problema.</p>
+                    <button type="button" id="helpTicketBtn" class="primary">Abrir ticket no Discord</button>
+                  </div>
+                  <p class="help-bye">Divirta-se e tenha uma ótima aventura na Sitrus Cobblemon!</p>
                 </section>
               </div>
             </div>
