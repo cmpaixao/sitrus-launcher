@@ -233,7 +233,7 @@ button, input, .tab, .filter {
 .social-rail {
   position: absolute;
   z-index: 6;
-  top: 120px;
+  top: 156px;
   right: 18px;
   display: flex;
   flex-direction: column;
@@ -545,9 +545,14 @@ h1 {
 }
 
 .chrome-tabs {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
   -webkit-app-region: no-drag;
   width: min(420px, 46vw);
-  margin: 0 auto;
+  margin: 0;
   background: rgba(0, 0, 0, 0.32);
   border-color: rgba(255, 255, 255, 0.14);
 }
