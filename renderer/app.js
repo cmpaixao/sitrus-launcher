@@ -293,7 +293,7 @@ ui.discordBtn.onclick = () => {
   window.sitrus.openExternal(state.pack?.discord || "https://discord.gg/wbavFswmkr");
 };
 ui.wikiBtn.onclick = () => {
-  window.sitrus.openExternal(state.pack?.wiki || "https://wiki-sitruscobblemon.com.br/");
+  window.sitrus.openExternal(state.pack?.wiki || "https://sitruscoblemon.gitbook.io/sitruscoblemon-docs");
 };
 ui.storeBtn.onclick = () => {
   window.sitrus.openExternal(state.pack?.store || "https://sitruscobblemon.craftingstore.net/");

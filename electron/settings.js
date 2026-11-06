@@ -15,7 +15,7 @@ function loadPackConfig() {
     launcherName: "Sitrus Launcher",
     modrinthSlug: "sitrus-cobblemon",
     discord: "https://discord.gg/wbavFswmkr",
-    wiki: "https://wiki-sitruscobblemon.com.br/",
+    wiki: "https://sitruscoblemon.gitbook.io/sitruscoblemon-docs",
     store: "https://sitruscobblemon.craftingstore.net/",
     server: { name: "Sitrus Cobblemon", address: "sitruscobblemon.com", port: 25565 },
   });

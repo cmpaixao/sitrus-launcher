@@ -6,7 +6,7 @@ Instala o pack do Modrinth sozinho e conecta em sitruscobblemon.com.
 
 Links:
 - Servidor: sitruscobblemon.com
-- Wiki:    https://wiki-sitruscobblemon.com.br/
+- Wiki:    https://sitruscoblemon.gitbook.io/sitruscoblemon-docs
 - Loja:    https://sitruscobblemon.craftingstore.net/
 - Discord: https://discord.gg/wbavFswmkr
 - Pack:    https://modrinth.com/modpack/sitrus-cobblemon

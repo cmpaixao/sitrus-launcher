@@ -3,7 +3,7 @@
 Launcher do pack **Sitrus Cobblemon** (Minecraft 1.21.1 + Fabric). Instala o pack do Modrinth, conecta em `sitruscobblemon.com` e deixa o jogador escolher extras só de client (mods, texturas e shaders).
 
 - Servidor: `sitruscobblemon.com`
-- Wiki: https://wiki-sitruscobblemon.com.br/
+- Wiki: https://sitruscoblemon.gitbook.io/sitruscoblemon-docs
 - Loja: https://sitruscobblemon.craftingstore.net/
 - Discord: https://discord.gg/wbavFswmkr
 - Pack: https://modrinth.com/modpack/sitrus-cobblemon
